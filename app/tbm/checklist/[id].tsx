@@ -1,4 +1,4 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Href, useLocalSearchParams, useRouter } from 'expo-router';
 import {
   AlertTriangle,
   ArrowLeft,
@@ -15,6 +15,8 @@ import Svg, { Path } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getTbmById, TbmSurveyItem } from '@/constants/tbm';
+import { useLang } from '@/contexts/LangContext';
+import type { Strings } from '@/lang';
 
 /** TBM-03 — 항목별 확인 워크스루 (Figma node 72:259788) */
 
@@ -24,14 +26,15 @@ type WalkItem =
   | { category: 'caution' | 'ppe'; item: TbmSurveyItem; indexInCat: number; catTotal: number }
   | { category: 'notice'; text: string };
 
-const CATEGORY_META: Record<
-  WalkCategory,
-  { label: string; color: string; bg: string; icon: typeof AlertTriangle }
-> = {
-  caution: { label: '주의사항',            color: '#d97706', bg: 'rgba(217,119,6,0.09)',  icon: AlertTriangle },
-  ppe:     { label: '개인안전보호구(PPE)', color: '#0d9488', bg: 'rgba(13,148,136,0.09)', icon: ShieldCheck   },
-  notice:  { label: '오늘의 특별 공지',   color: '#3e63dd', bg: 'rgba(62,99,221,0.09)',  icon: FileText      },
-};
+type CategoryMeta = { label: string; color: string; bg: string; icon: typeof AlertTriangle };
+
+function getCategoryMeta(s: Strings): Record<WalkCategory, CategoryMeta> {
+  return {
+    caution: { label: s.checklist.cautions, color: '#d97706', bg: 'rgba(217,119,6,0.09)',  icon: AlertTriangle },
+    ppe:     { label: s.checklist.ppe,      color: '#0d9488', bg: 'rgba(13,148,136,0.09)', icon: ShieldCheck   },
+    notice:  { label: s.checklist.specialNotice, color: '#3e63dd', bg: 'rgba(62,99,221,0.09)', icon: FileText },
+  };
+}
 
 type Point = { x: number; y: number };
 
@@ -52,6 +55,7 @@ function pointsToPath(points: Point[]): string {
 // ─── 기본 정보 미니 카드 ─────────────────────────────────────────────────────
 
 function BasicInfoMini({ supervisor, date }: { supervisor: string; date: string }) {
+  const { s } = useLang();
   return (
     <View
       className="w-full overflow-hidden rounded-xl border"
@@ -87,7 +91,7 @@ function BasicInfoMini({ supervisor, date }: { supervisor: string; date: string 
               {supervisor}
             </Text>
             <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 11, letterSpacing: -0.2, color: 'rgba(0,7,20,0.5)' }}>
-              작업 책임자
+              {s.tbm.workManager}
             </Text>
           </View>
           <View style={{ flex: 1 }} />
@@ -95,7 +99,7 @@ function BasicInfoMini({ supervisor, date }: { supervisor: string; date: string 
             className="items-center justify-center rounded overflow-hidden"
             style={{ backgroundColor: 'rgba(0,164,51,0.1)', paddingHorizontal: 7, paddingVertical: 3 }}>
             <Text style={{ fontFamily: 'Pretendard-Medium', fontSize: 11, letterSpacing: -0.2, color: 'rgba(0,113,63,0.87)' }}>
-              TBM 책임자
+              {s.tbm.tbmManager}
             </Text>
           </View>
         </View>
@@ -115,6 +119,7 @@ function SignPage({
   date: string;
   onComplete: () => void;
 }) {
+  const { s } = useLang();
   const [strokes, setStrokes] = useState<Point[][]>([]);
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
   const currentStrokeRef = useRef<Point[]>([]);
@@ -161,7 +166,7 @@ function SignPage({
         <View className="flex-row items-center" style={{ gap: 8 }}>
           <CheckCircle2 color="rgba(0,113,63,0.87)" size={16} strokeWidth={2} />
           <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 13, letterSpacing: -0.3, color: 'rgba(0,113,63,0.87)' }}>
-            모든 항목 확인 완료 — 서명하여 TBM을 완료해 주세요.
+            {s.checklist.allConfirmedBanner}
           </Text>
         </View>
       </View>
@@ -189,7 +194,7 @@ function SignPage({
             <PenLine color="#3e63dd" size={17} strokeWidth={2} />
           </View>
           <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 15, letterSpacing: -0.4, color: '#1c2024', flex: 1 }}>
-            참석 확인 및 서명
+            {s.checklist.attendanceAndSign}
           </Text>
           <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 12, letterSpacing: -0.2, color: 'rgba(0,7,20,0.45)', textAlign: 'right' }}>
             {date}
@@ -201,7 +206,7 @@ function SignPage({
         {/* 책임자 행 */}
         <View className="flex-row items-center justify-between">
           <Text style={{ fontFamily: 'Pretendard-Medium', fontSize: 13, letterSpacing: -0.3, color: 'rgba(0,7,20,0.5)' }}>
-            책임자
+            {s.checklist.managerLabel}
           </Text>
           <Text style={{ fontFamily: 'Pretendard-SemiBold', fontSize: 13, letterSpacing: -0.3, color: '#1c2024' }}>
             {supervisor}
@@ -213,7 +218,7 @@ function SignPage({
         {/* 서명란 레이블 + 지우기 버튼 */}
         <View className="flex-row items-center justify-between">
           <Text style={{ fontFamily: 'Pretendard-Medium', fontSize: 12, letterSpacing: -0.25, color: 'rgba(0,7,20,0.5)' }}>
-            서명
+            {s.checklist.signLabel}
           </Text>
           {isSigned && (
             <Pressable
@@ -222,7 +227,7 @@ function SignPage({
               hitSlop={8}>
               <RotateCcw color="rgba(0,7,20,0.4)" size={12} strokeWidth={2} />
               <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 11, letterSpacing: -0.2, color: 'rgba(0,7,20,0.4)' }}>
-                다시 서명
+                {s.checklist.resignLabel}
               </Text>
             </Pressable>
           )}
@@ -256,7 +261,7 @@ function SignPage({
               }}>
               <PenLine color="rgba(0,0,47,0.18)" size={32} strokeWidth={1.5} />
               <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 14, letterSpacing: -0.3, color: 'rgba(0,7,20,0.3)' }}>
-                서명하기
+                {s.checklist.signHere}
               </Text>
             </View>
           )}
@@ -301,7 +306,7 @@ function SignPage({
           lineHeight: 17,
           textAlign: 'center',
         }}>
-          본인은 위 TBM 내용을 모두 확인하였으며 안전 수칙을 준수할 것을 확인합니다.
+          {s.checklist.disclaimer}
         </Text>
 
         {/* 완료 버튼 */}
@@ -316,7 +321,7 @@ function SignPage({
             letterSpacing: -0.4,
             color: isSigned ? '#ffffff' : 'rgba(0,7,20,0.28)',
           }}>
-            {isSigned ? 'TBM 완료하기' : '서명 후 완료 가능합니다'}
+            {isSigned ? s.checklist.completeTbm : s.checklist.signBeforeComplete}
           </Text>
         </Pressable>
       </View>
@@ -336,7 +341,7 @@ function SurveyItemCard({
   nextLabel,
 }: {
   item: TbmSurveyItem;
-  meta: (typeof CATEGORY_META)[WalkCategory];
+  meta: CategoryMeta;
   indexInCat: number;
   catTotal: number;
   step: number;
@@ -435,7 +440,8 @@ function SurveyItemCard({
 // ─── 특별 공지 카드 ───────────────────────────────────────────────────────────
 
 function NoticeCard({ text, step, totalItems }: { text: string; step: number; totalItems: number }) {
-  const meta = CATEGORY_META.notice;
+  const { s } = useLang();
+  const meta = getCategoryMeta(s).notice;
   const Icon = meta.icon;
   return (
     <View
@@ -461,7 +467,7 @@ function NoticeCard({ text, step, totalItems }: { text: string; step: number; to
             </Text>
           </View>
           <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 11, letterSpacing: -0.2, color: 'rgba(0,7,20,0.4)' }}>
-            마지막 확인 항목
+            {s.checklist.lastItem}
           </Text>
         </View>
         <View
@@ -480,7 +486,7 @@ function NoticeCard({ text, step, totalItems }: { text: string; step: number; to
           <Icon color={meta.color} size={15} strokeWidth={2} />
         </View>
         <Text style={{ fontFamily: 'Pretendard-Medium', fontSize: 12, letterSpacing: -0.25, color: 'rgba(0,7,20,0.5)' }}>
-          오늘의 공지사항
+          {s.checklist.todayNoticeLabel}
         </Text>
       </View>
 
@@ -501,7 +507,10 @@ export default function TbmChecklistScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { s } = useLang();
   const [step, setStep] = useState(0);
+
+  const CATEGORY_META = getCategoryMeta(s);
 
   const tbm = id ? getTbmById(String(id)) : undefined;
 
@@ -512,7 +521,7 @@ export default function TbmChecklistScreen() {
   if (!tbm) {
     return (
       <View className="flex-1 items-center justify-center bg-[#fbfdff]">
-        <Text style={{ fontFamily: 'Pretendard-Regular', color: '#64748b' }}>TBM을 찾을 수 없습니다.</Text>
+        <Text style={{ fontFamily: 'Pretendard-Regular', color: '#64748b' }}>{s.tbm.notFound}</Text>
       </View>
     );
   }
@@ -538,8 +547,8 @@ export default function TbmChecklistScreen() {
 
   const nextItem = !isSignPage && step + 1 < allItems.length ? allItems[step + 1] : null;
   const nextLabel = (() => {
-    if (!nextItem) return '서명';
-    if (nextItem.category === 'notice') return '오늘의 특별 공지';
+    if (!nextItem) return s.checklist.signLabel;
+    if (nextItem.category === 'notice') return s.checklist.specialNotice;
     if (!currentWalkItem || currentWalkItem.category !== nextItem.category)
       return CATEGORY_META[nextItem.category].label;
     return `항목 ${(nextItem as Extract<WalkItem, { category: 'caution' | 'ppe' }>).indexInCat}`;
@@ -565,7 +574,7 @@ export default function TbmChecklistScreen() {
         </Pressable>
         <View className="flex-1 items-center justify-center">
           <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 20, letterSpacing: -0.5, color: '#ffffff' }}>
-            Today's TBM
+            {s.tbm.sessionTitle}
           </Text>
         </View>
         <View
@@ -599,13 +608,13 @@ export default function TbmChecklistScreen() {
             style={{ backgroundColor: '#8b8d98', paddingHorizontal: 10, paddingVertical: 6, alignSelf: 'flex-start' }}>
             <ArrowLeft color="#ffffff" size={13} strokeWidth={2} />
             <Text style={{ fontFamily: 'Pretendard-Medium', fontSize: 12, letterSpacing: -0.25, color: '#ffffff' }}>
-              목록으로 돌아가기
+              {s.common.backToList}
             </Text>
           </Pressable>
           <SignPage
             supervisor={tbm.supervisor}
             date={formatDateKR(tbm.scheduledAt)}
-            onComplete={() => router.back()}
+            onComplete={() => router.dismissTo('/tbm' as Href)}
           />
         </View>
       </View>
@@ -631,7 +640,7 @@ export default function TbmChecklistScreen() {
             style={{ backgroundColor: '#8b8d98', paddingHorizontal: 10, paddingVertical: 6, alignSelf: 'flex-start' }}>
             <ArrowLeft color="#ffffff" size={13} strokeWidth={2} />
             <Text style={{ fontFamily: 'Pretendard-Medium', fontSize: 12, letterSpacing: -0.25, color: '#ffffff' }}>
-              목록으로 돌아가기
+              {s.common.backToList}
             </Text>
           </Pressable>
         </View>
@@ -678,7 +687,7 @@ export default function TbmChecklistScreen() {
           className="h-12 w-full flex-row items-center justify-center gap-2 rounded-xl bg-[#3e63dd] active:opacity-90"
           accessibilityRole="button">
           <Text style={{ fontFamily: 'Pretendard-Medium', fontSize: 18, letterSpacing: -0.45, color: '#ffffff' }}>
-            위 내용을 모두 확인함
+            {s.checklist.confirmAll}
           </Text>
           <ChevronRight color="#ffffff" size={20} strokeWidth={2.5} />
         </Pressable>

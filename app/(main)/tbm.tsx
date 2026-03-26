@@ -14,6 +14,7 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useDrawer } from '@/contexts/DrawerContext';
+import { useLang } from '@/contexts/LangContext';
 import { MOCK_TBMS, TbmItem, TbmStatus } from '@/constants/tbm';
 
 /** TBM-01 */
@@ -40,11 +41,14 @@ function getHHMM(iso: string) {
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 }
 
-const STATUS_LABEL: Record<TbmStatus, string> = {
-  completed: '완료',
-  incomplete: '미완료',
-  scheduled: '예정',
-};
+function useStatusLabel(): Record<TbmStatus, string> {
+  const { s } = useLang();
+  return {
+    completed: s.status.completed,
+    incomplete: s.status.incomplete,
+    scheduled: s.status.scheduled,
+  };
+}
 
 const STATUS_COLORS: Record<TbmStatus, { bg: string; text: string; dot: string }> = {
   completed: { bg: 'rgba(34,197,94,0.1)', text: '#15803d', dot: '#22c55e' },
@@ -57,6 +61,7 @@ type FilterTab = 'all' | TbmStatus;
 // ─── Today Hero Card ────────────────────────────────────────────────────────
 
 function TodayHeroCard({ item }: { item: TbmItem }) {
+  const { s } = useLang();
   const done = item.checklist.filter((c) => c.done).length;
   const total = item.checklist.length;
   const pct = total > 0 ? done / total : 0;
@@ -91,11 +96,11 @@ function TodayHeroCard({ item }: { item: TbmItem }) {
             <View
               className="items-center justify-center rounded-full px-3 py-1"
               style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
-              <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 11, letterSpacing: 1, color: '#ffffff' }}>
-                TODAY
+              <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 11, lineHeight: 13, letterSpacing: 1, color: '#ffffff' }}>
+                {s.tbm.todayBadge}
               </Text>
             </View>
-            <Text style={{ fontFamily: 'Pretendard-Medium', fontSize: 13, color: 'rgba(255,255,255,0.7)', letterSpacing: -0.2 }}>
+            <Text style={{ fontFamily: 'Pretendard-Medium', fontSize: 13, lineHeight: 16, color: 'rgba(255,255,255,0.7)', letterSpacing: -0.2 }}>
               {getDayLabel(item.scheduledAt)} {getHHMM(item.scheduledAt)}
             </Text>
           </View>
@@ -109,7 +114,7 @@ function TodayHeroCard({ item }: { item: TbmItem }) {
             </Text>
             <View className="flex-row items-center gap-1.5">
               <Users color="rgba(255,255,255,0.6)" size={13} strokeWidth={2} />
-              <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 13, color: 'rgba(255,255,255,0.7)', letterSpacing: -0.2 }}>
+              <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 13, lineHeight: 16, color: 'rgba(255,255,255,0.7)', letterSpacing: -0.2 }}>
                 책임자 {item.supervisor} · 참석 {item.attendeeCount}명
               </Text>
             </View>
@@ -118,10 +123,10 @@ function TodayHeroCard({ item }: { item: TbmItem }) {
           {/* 체크리스트 진행률 */}
           <View style={{ gap: 8 }}>
             <View className="flex-row items-center justify-between">
-              <Text style={{ fontFamily: 'Pretendard-Medium', fontSize: 12, color: 'rgba(255,255,255,0.7)', letterSpacing: -0.2 }}>
-                체크리스트 진행률
+              <Text style={{ fontFamily: 'Pretendard-Medium', fontSize: 12, lineHeight: 14, color: 'rgba(255,255,255,0.7)', letterSpacing: -0.2 }}>
+                {s.tbm.checklistProgress}
               </Text>
-              <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 13, color: '#ffffff' }}>
+              <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 13, lineHeight: 16, color: '#ffffff' }}>
                 {done}/{total}
               </Text>
             </View>
@@ -138,10 +143,10 @@ function TodayHeroCard({ item }: { item: TbmItem }) {
             className="flex-row items-center justify-between rounded-2xl px-5"
             style={{ backgroundColor: 'rgba(255,255,255,0.15)', paddingVertical: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' }}>
             <View style={{ gap: 2 }}>
-              <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 16, color: '#ffffff', letterSpacing: -0.35 }}>
-                TBM 시작하기
+              <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 16, lineHeight: 19, color: '#ffffff', letterSpacing: -0.35 }}>
+                {s.tbm.startButton}
               </Text>
-              <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 12, color: 'rgba(255,255,255,0.65)', letterSpacing: -0.2 }}>
+              <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 12, lineHeight: 14, color: 'rgba(255,255,255,0.65)', letterSpacing: -0.2 }}>
                 확인할 사항 {pendingItems}개 남음
               </Text>
             </View>
@@ -160,6 +165,7 @@ function TodayHeroCard({ item }: { item: TbmItem }) {
 // ─── No Today Card ───────────────────────────────────────────────────────────
 
 function NoTodayCard() {
+  const { s } = useLang();
   return (
     <View
       className="w-full overflow-hidden"
@@ -184,11 +190,11 @@ function NoTodayCard() {
           style={{ backgroundColor: 'rgba(62,99,221,0.1)' }}>
           <ClipboardList color="#3e63dd" size={28} strokeWidth={2} />
         </View>
-        <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 17, letterSpacing: -0.4, color: '#1c2024' }}>
-          오늘 예정된 TBM 없음
+        <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 17, lineHeight: 20, letterSpacing: -0.4, color: '#1c2024' }}>
+          {s.tbm.noTodayTitle}
         </Text>
         <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 14, color: 'rgba(0,7,20,0.5)', letterSpacing: -0.2, textAlign: 'center', lineHeight: 21 }}>
-          오늘 등록된 TBM 일정이 없습니다.{'\n'}이전 기록을 확인하거나 담당자에게 문의하세요.
+          {s.tbm.noTodayDesc}
         </Text>
       </LinearGradient>
     </View>
@@ -198,16 +204,17 @@ function NoTodayCard() {
 // ─── Stats Row ───────────────────────────────────────────────────────────────
 
 function StatsRow({ items }: { items: TbmItem[] }) {
+  const { s } = useLang();
   const total = items.length;
   const completed = items.filter((t) => t.status === 'completed').length;
   const incomplete = items.filter((t) => t.status === 'incomplete').length;
   const scheduled = items.filter((t) => t.status === 'scheduled').length;
 
   const chips = [
-    { label: '전체', value: total, color: '#3e63dd', bg: 'rgba(62,99,221,0.08)' },
-    { label: '완료', value: completed, color: '#15803d', bg: 'rgba(34,197,94,0.08)' },
-    { label: '미완료', value: incomplete, color: '#b91c1c', bg: 'rgba(229,72,77,0.08)' },
-    { label: '예정', value: scheduled, color: '#1d4ed8', bg: 'rgba(62,99,221,0.08)' },
+    { label: s.status.all, value: total, color: '#3e63dd', bg: 'rgba(62,99,221,0.08)' },
+    { label: s.status.completed, value: completed, color: '#15803d', bg: 'rgba(34,197,94,0.08)' },
+    { label: s.status.incomplete, value: incomplete, color: '#b91c1c', bg: 'rgba(229,72,77,0.08)' },
+    { label: s.status.scheduled, value: scheduled, color: '#1d4ed8', bg: 'rgba(62,99,221,0.08)' },
   ];
 
   return (
@@ -217,10 +224,10 @@ function StatsRow({ items }: { items: TbmItem[] }) {
           key={label}
           className="flex-1 items-center justify-center rounded-2xl py-3"
           style={{ backgroundColor: bg }}>
-          <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 18, color, letterSpacing: -0.4 }}>
+          <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 18, lineHeight: 22, color, letterSpacing: -0.4 }}>
             {value}
           </Text>
-          <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 11, color: 'rgba(0,7,20,0.5)', marginTop: 2, letterSpacing: -0.1 }}>
+          <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 11, lineHeight: 13, color: 'rgba(0,7,20,0.5)', marginTop: 2, letterSpacing: -0.1 }}>
             {label}
           </Text>
         </View>
@@ -231,14 +238,14 @@ function StatsRow({ items }: { items: TbmItem[] }) {
 
 // ─── Filter Tabs ─────────────────────────────────────────────────────────────
 
-const TABS: { key: FilterTab; label: string }[] = [
-  { key: 'all', label: '전체' },
-  { key: 'completed', label: '완료' },
-  { key: 'incomplete', label: '미완료' },
-  { key: 'scheduled', label: '예정' },
-];
-
 function FilterTabs({ active, onChange }: { active: FilterTab; onChange: (k: FilterTab) => void }) {
+  const { s } = useLang();
+  const TABS: { key: FilterTab; label: string }[] = [
+    { key: 'all', label: s.status.all },
+    { key: 'completed', label: s.status.completed },
+    { key: 'incomplete', label: s.status.incomplete },
+    { key: 'scheduled', label: s.status.scheduled },
+  ];
   return (
     <View className="flex-row rounded-xl p-1" style={{ backgroundColor: 'rgba(0,0,47,0.06)' }}>
       {TABS.map(({ key, label }) => (
@@ -253,6 +260,7 @@ function FilterTabs({ active, onChange }: { active: FilterTab; onChange: (k: Fil
             style={{
               fontFamily: active === key ? 'Pretendard-SemiBold' : 'Pretendard-Regular',
               fontSize: 13,
+              lineHeight: 16,
               letterSpacing: -0.2,
               color: active === key ? '#1c2024' : 'rgba(0,7,20,0.5)',
             }}>
@@ -267,6 +275,7 @@ function FilterTabs({ active, onChange }: { active: FilterTab; onChange: (k: Fil
 // ─── Past TBM Row Card ───────────────────────────────────────────────────────
 
 function PastTbmCard({ item }: { item: TbmItem }) {
+  const STATUS_LABEL = useStatusLabel();
   const done = item.checklist.filter((c) => c.done).length;
   const total = item.checklist.length;
   const pct = total > 0 ? done / total : 0;
@@ -289,10 +298,10 @@ function PastTbmCard({ item }: { item: TbmItem }) {
           {/* 상단 행: 날짜 + 상태 뱃지 */}
           <View className="flex-row items-center justify-between">
             <View className="flex-row items-center gap-2">
-              <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 15, color: '#1c2024', letterSpacing: -0.3 }}>
+              <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 15, lineHeight: 18, color: '#1c2024', letterSpacing: -0.3 }}>
                 {getDayLabel(item.scheduledAt)}
               </Text>
-              <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 13, color: 'rgba(0,7,20,0.4)', letterSpacing: -0.2 }}>
+              <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 13, lineHeight: 16, color: 'rgba(0,7,20,0.4)', letterSpacing: -0.2 }}>
                 {getHHMM(item.scheduledAt)}
               </Text>
             </View>
@@ -300,7 +309,7 @@ function PastTbmCard({ item }: { item: TbmItem }) {
               className="flex-row items-center gap-1.5 rounded-full px-2.5 py-1"
               style={{ backgroundColor: sc.bg }}>
               <View className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: sc.dot }} />
-              <Text style={{ fontFamily: 'Pretendard-SemiBold', fontSize: 12, color: sc.text, letterSpacing: -0.2 }}>
+              <Text style={{ fontFamily: 'Pretendard-SemiBold', fontSize: 12, lineHeight: 14, color: sc.text, letterSpacing: -0.2 }}>
                 {STATUS_LABEL[item.status]}
               </Text>
             </View>
@@ -317,7 +326,7 @@ function PastTbmCard({ item }: { item: TbmItem }) {
           <View className="flex-row items-center gap-3">
             <View className="flex-1 flex-row items-center gap-1">
               <Users color="#94a3b8" size={12} strokeWidth={2} />
-              <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 12, color: '#64748b', letterSpacing: -0.15 }}>
+              <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 12, lineHeight: 14, color: '#64748b', letterSpacing: -0.15 }}>
                 책임자 {item.supervisor} · 참석 {item.attendeeCount}명
               </Text>
             </View>
@@ -332,7 +341,7 @@ function PastTbmCard({ item }: { item: TbmItem }) {
                   style={{ width: `${pct * 100}%`, backgroundColor: pct >= 1 ? '#22c55e' : '#3e63dd' }}
                 />
               </View>
-              <Text style={{ fontFamily: 'Pretendard-SemiBold', fontSize: 12, color: pct >= 1 ? '#15803d' : '#3e63dd', letterSpacing: -0.2 }}>
+              <Text style={{ fontFamily: 'Pretendard-SemiBold', fontSize: 12, lineHeight: 14, color: pct >= 1 ? '#15803d' : '#3e63dd', letterSpacing: -0.2 }}>
                 {done}/{total}
               </Text>
             </View>
@@ -357,6 +366,7 @@ export default function TbmListScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { openDrawer } = useDrawer();
+  const { s } = useLang();
   const [filter, setFilter] = useState<FilterTab>('all');
 
   const headerBlockH = 40 + 8;
@@ -365,7 +375,9 @@ export default function TbmListScreen() {
   const todayTbm = useMemo(() => MOCK_TBMS.find((t) => isToday(t.scheduledAt)), []);
   const pastTbms = useMemo(
     () =>
-      MOCK_TBMS.filter((t) => !isToday(t.scheduledAt)).sort(
+      MOCK_TBMS.filter(
+        (t) => !isToday(t.scheduledAt) || t.appearsInHistoryList === true,
+      ).sort(
         (a, b) => new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime(),
       ),
     [],
@@ -395,7 +407,7 @@ export default function TbmListScreen() {
           </Pressable>
           <View className="flex-1 items-center justify-center">
             <Text
-              style={{ fontFamily: 'Pretendard-Bold', fontSize: 20, letterSpacing: -0.5, color: '#ffffff' }}>
+              style={{ fontFamily: 'Pretendard-Bold', fontSize: 20, lineHeight: 24, letterSpacing: -0.5, color: '#ffffff' }}>
               Tool Box Meeting
             </Text>
           </View>
@@ -424,10 +436,10 @@ export default function TbmListScreen() {
         {/* ── 이전 기록 ── */}
         <View style={{ gap: 10 }}>
           <View className="flex-row items-center justify-between">
-            <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 13, letterSpacing: -0.2, color: 'rgba(0,7,20,0.45)' }}>
-              이전 기록
+            <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 13, lineHeight: 16, letterSpacing: -0.2, color: 'rgba(0,7,20,0.45)' }}>
+              {s.tbm.previousRecords}
             </Text>
-            <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 12, color: 'rgba(0,7,20,0.35)', letterSpacing: -0.15 }}>
+            <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 12, lineHeight: 14, color: 'rgba(0,7,20,0.35)', letterSpacing: -0.15 }}>
               {filteredPast.length}건
             </Text>
           </View>
@@ -447,8 +459,8 @@ export default function TbmListScreen() {
               className="items-center rounded-2xl py-10"
               style={{ backgroundColor: 'rgba(0,0,47,0.03)', borderWidth: 1, borderColor: 'rgba(0,0,47,0.07)' }}>
               <ClipboardList color="#94a3b8" size={32} strokeWidth={1.5} />
-              <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 14, color: '#94a3b8', marginTop: 10, letterSpacing: -0.2 }}>
-                해당 상태의 TBM 기록이 없습니다
+              <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 14, lineHeight: 17, color: '#94a3b8', marginTop: 10, letterSpacing: -0.2 }}>
+                {s.tbm.noRecordsForStatus}
               </Text>
             </View>
           )}

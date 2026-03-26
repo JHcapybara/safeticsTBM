@@ -2,6 +2,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { AlertTriangle, ChevronRight, Hand, Siren } from 'lucide-react-native';
 import { Pressable, Text, View } from 'react-native';
 
+import { useLang } from '@/contexts/LangContext';
+
 type Props = {
   variant: 'hazard' | 'sos' | 'stop';
   onPress?: () => void;
@@ -39,12 +41,14 @@ const CTA_TEXT = '#3e63dd';
  * 위험원 보고 / 긴급 SOS / 작업 중지 — 화이트·파스텔 톤
  */
 export function EmergencyActionCard({ variant, onPress }: Props) {
+  const { s } = useLang();
+
   if (variant === 'hazard') {
     return (
       <Pressable
         onPress={onPress}
         accessibilityRole="button"
-        accessibilityLabel="위험원 보고"
+        accessibilityLabel={s.emergency.hazard.title}
         className="border border-[rgba(0,0,47,0.08)] active:opacity-95"
         style={[{ width: CARD_W, borderRadius: CARD_RADIUS }, HOME_CARD_SHADOW]}>
         <View className="overflow-hidden" style={{ borderRadius: CARD_RADIUS }}>
@@ -62,8 +66,8 @@ export function EmergencyActionCard({ variant, onPress }: Props) {
                   <AlertTriangle color="#d97706" size={22} strokeWidth={2.2} />
                 </View>
                 <View className="rounded-full bg-white/90 px-2.5 py-1" style={{ borderWidth: 1, borderColor: 'rgba(251, 191, 36, 0.35)' }}>
-                  <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 10, letterSpacing: 0.8, color: '#b45309' }}>
-                    RISK
+                  <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 10, lineHeight: 12, letterSpacing: 0.8, color: '#b45309' }}>
+                    {s.emergency.hazard.badge}
                   </Text>
                 </View>
               </View>
@@ -72,10 +76,11 @@ export function EmergencyActionCard({ variant, onPress }: Props) {
                 style={{
                   fontFamily: 'Pretendard-Bold',
                   fontSize: 20,
+                  lineHeight: 24,
                   letterSpacing: -0.5,
                   color: TITLE_COLOR,
                 }}>
-                위험원 보고
+                {s.emergency.hazard.title}
               </Text>
               <Text
                 style={{
@@ -86,14 +91,14 @@ export function EmergencyActionCard({ variant, onPress }: Props) {
                   marginTop: 6,
                   letterSpacing: -0.2,
                 }}>
-                미조치 위험원이 있나요?{'\n'}관리자에게 즉시 알립니다.
+                {s.emergency.hazard.desc}
               </Text>
             </View>
 
             <View
               className="flex-row items-center justify-center gap-1 rounded-xl py-2.5"
               style={{ backgroundColor: 'rgba(254, 243, 199, 0.55)', borderWidth: 1, borderColor: 'rgba(251, 191, 36, 0.2)' }}>
-              <Text style={{ fontFamily: 'Pretendard-SemiBold', fontSize: 13, color: CTA_TEXT }}>탭하여 보고</Text>
+              <Text style={{ fontFamily: 'Pretendard-SemiBold', fontSize: 13, lineHeight: 16, color: CTA_TEXT }}>{s.emergency.hazard.cta}</Text>
               <ChevronRight color="#3e63dd" size={18} strokeWidth={2.5} />
             </View>
           </LinearGradient>
@@ -107,7 +112,7 @@ export function EmergencyActionCard({ variant, onPress }: Props) {
       <Pressable
         onPress={onPress}
         accessibilityRole="button"
-        accessibilityLabel="긴급 SOS"
+        accessibilityLabel={s.emergency.sos.title}
         className="border border-[rgba(0,0,47,0.08)] active:opacity-95"
         style={[{ width: CARD_W, borderRadius: CARD_RADIUS }, HOME_CARD_SHADOW]}>
         <View className="overflow-hidden" style={{ borderRadius: CARD_RADIUS }}>
@@ -125,8 +130,8 @@ export function EmergencyActionCard({ variant, onPress }: Props) {
                   <Siren color="#e11d48" size={22} strokeWidth={2.2} />
                 </View>
                 <View className="rounded-full bg-white/90 px-2.5 py-1" style={{ borderWidth: 1, borderColor: 'rgba(251, 113, 133, 0.35)' }}>
-                  <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 10, letterSpacing: 0.8, color: '#be123c' }}>
-                    HELP
+                  <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 10, lineHeight: 12, letterSpacing: 0.8, color: '#be123c' }}>
+                    {s.emergency.sos.badge}
                   </Text>
                 </View>
               </View>
@@ -135,10 +140,11 @@ export function EmergencyActionCard({ variant, onPress }: Props) {
                 style={{
                   fontFamily: 'Pretendard-Bold',
                   fontSize: 22,
+                  lineHeight: 26,
                   letterSpacing: -0.6,
                   color: TITLE_COLOR,
                 }}>
-                긴급 SOS
+                {s.emergency.sos.title}
               </Text>
               <Text
                 style={{
@@ -149,14 +155,14 @@ export function EmergencyActionCard({ variant, onPress }: Props) {
                   marginTop: 6,
                   letterSpacing: -0.2,
                 }}>
-                비상벨을 울리고{'\n'}관제에 즉시 연결됩니다.
+                {s.emergency.sos.desc}
               </Text>
             </View>
 
             <View
               className="flex-row items-center justify-center gap-1 rounded-xl py-2.5"
               style={{ backgroundColor: 'rgba(255, 228, 230, 0.55)', borderWidth: 1, borderColor: 'rgba(251, 113, 133, 0.2)' }}>
-              <Text style={{ fontFamily: 'Pretendard-SemiBold', fontSize: 13, color: CTA_TEXT }}>탭하여 전송</Text>
+              <Text style={{ fontFamily: 'Pretendard-SemiBold', fontSize: 13, lineHeight: 16, color: CTA_TEXT }}>{s.emergency.sos.cta}</Text>
               <ChevronRight color="#3e63dd" size={18} strokeWidth={2.5} />
             </View>
           </LinearGradient>
@@ -169,7 +175,7 @@ export function EmergencyActionCard({ variant, onPress }: Props) {
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel="작업 중지 요청"
+      accessibilityLabel={s.emergency.stop.title}
       className="border border-[rgba(0,0,47,0.08)] active:opacity-95"
       style={[{ width: CARD_W, borderRadius: CARD_RADIUS }, HOME_CARD_SHADOW]}>
       <View className="overflow-hidden" style={{ borderRadius: CARD_RADIUS }}>
@@ -187,8 +193,8 @@ export function EmergencyActionCard({ variant, onPress }: Props) {
                 <Hand color="#475569" size={22} strokeWidth={2.2} />
               </View>
               <View className="rounded-full bg-white/90 px-2.5 py-1" style={{ borderWidth: 1, borderColor: 'rgba(148, 163, 184, 0.35)' }}>
-                <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 10, letterSpacing: 0.8, color: '#475569' }}>
-                  STOP
+                <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 10, lineHeight: 12, letterSpacing: 0.8, color: '#475569' }}>
+                  {s.emergency.stop.badge}
                 </Text>
               </View>
             </View>
@@ -197,10 +203,11 @@ export function EmergencyActionCard({ variant, onPress }: Props) {
               style={{
                 fontFamily: 'Pretendard-Bold',
                 fontSize: 22,
+                lineHeight: 26,
                 letterSpacing: -0.6,
                 color: TITLE_COLOR,
               }}>
-              작업 중지 요청
+              {s.emergency.stop.title}
             </Text>
             <Text
               style={{
@@ -211,14 +218,14 @@ export function EmergencyActionCard({ variant, onPress }: Props) {
                 marginTop: 6,
                 letterSpacing: -0.2,
               }}>
-              관리자에게 즉시 알림이 전달되며{'\n'}현장 작업을 중단합니다.
+              {s.emergency.stop.desc}
             </Text>
           </View>
 
           <View
             className="flex-row items-center justify-center gap-1 rounded-xl py-2.5"
             style={{ backgroundColor: 'rgba(226, 232, 240, 0.45)', borderWidth: 1, borderColor: 'rgba(148, 163, 184, 0.22)' }}>
-            <Text style={{ fontFamily: 'Pretendard-SemiBold', fontSize: 13, color: CTA_TEXT }}>탭하여 요청</Text>
+            <Text style={{ fontFamily: 'Pretendard-SemiBold', fontSize: 13, lineHeight: 16, color: CTA_TEXT }}>{s.emergency.stop.cta}</Text>
             <ChevronRight color="#3e63dd" size={18} strokeWidth={2.5} />
           </View>
         </LinearGradient>

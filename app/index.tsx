@@ -1,5 +1,5 @@
 import { SafeticsSymbol } from '@/components/SafeticsSymbol';
-import { Href, Link, Stack } from 'expo-router';
+import { Redirect, Stack } from 'expo-router';
 import { ChevronRight } from 'lucide-react-native';
 import { useState } from 'react';
 import {
@@ -13,19 +13,41 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useAuth } from '@/contexts/AuthContext';
+import { useLang } from '@/contexts/LangContext';
+
 /** LGN-01 — Figma node 78:272209 (TBM 화면설계) */
 type LoginTab = 'id' | 'otp';
 
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
-  const [tab, setTab] = useState<LoginTab>('otp');
+  const { s } = useLang();
+  const { isLoggedIn, login } = useAuth();
+  const [tab, setTab] = useState<LoginTab>('id');
   const [userId, setUserId] = useState('');
   const [password, setPassword] = useState('');
   const [otpCode, setOtpCode] = useState('');
   const [phone, setPhone] = useState('');
   const [userName, setUserName] = useState('');
+  const [loginError, setLoginError] = useState<string | null>(null);
 
   const headerMinH = 320;
+
+  if (isLoggedIn) {
+    return <Redirect href="/(main)" />;
+  }
+
+  const handleLogin = () => {
+    setLoginError(null);
+    if (tab === 'otp') {
+      setLoginError(s.login.otpNotAvailable);
+      return;
+    }
+    const ok = login(userId, password);
+    if (!ok) {
+      setLoginError(s.login.invalidCredentials);
+    }
+  };
 
   return (
     <>
@@ -59,12 +81,12 @@ export default function LoginScreen() {
                 className="font-bold text-white"
                 style={{ fontSize: 60, lineHeight: 60, letterSpacing: -1.5 }}
                 allowFontScaling={false}>
-                Log in
+                {s.login.title}
               </Text>
               <Text
                 className="text-white"
                 style={{ fontSize: 18, lineHeight: 28.8, letterSpacing: -0.45 }}>
-                안전한 현장 관리를 위해 로그인해 주세요.
+                {s.login.subtitle}
               </Text>
             </View>
           </View>
@@ -74,7 +96,10 @@ export default function LoginScreen() {
             <View className="w-full max-w-[343px] self-center" style={{ gap: 10 }}>
             <View className="w-full max-w-[343px] flex-row items-start justify-center gap-2.5 self-center">
               <Pressable
-                onPress={() => setTab('id')}
+                onPress={() => {
+                  setTab('id');
+                  setLoginError(null);
+                }}
                 className="relative h-10 flex-1 items-center justify-center px-1"
                 accessibilityRole="tab"
                 accessibilityState={{ selected: tab === 'id' }}>
@@ -88,11 +113,14 @@ export default function LoginScreen() {
                     color: tab === 'id' ? '#1c2024' : 'rgba(0, 7, 20, 0.62)',
                     letterSpacing: -0.35,
                   }}>
-                  아이디 로그인
+                  {s.login.tabId}
                 </Text>
               </Pressable>
               <Pressable
-                onPress={() => setTab('otp')}
+                onPress={() => {
+                  setTab('otp');
+                  setLoginError(null);
+                }}
                 className="relative h-10 flex-1 items-center justify-center px-1"
                 accessibilityRole="tab"
                 accessibilityState={{ selected: tab === 'otp' }}>
@@ -106,7 +134,7 @@ export default function LoginScreen() {
                     color: tab === 'otp' ? '#1c2024' : 'rgba(0, 7, 20, 0.62)',
                     letterSpacing: -0.35,
                   }}>
-                  인증번호 로그인
+                  {s.login.tabOtp}
                 </Text>
               </Pressable>
             </View>
@@ -127,16 +155,19 @@ export default function LoginScreen() {
                     <Text
                       className="w-full font-medium text-[#1c2024]"
                       style={{ fontSize: 16, lineHeight: 25.6, letterSpacing: -0.4 }}>
-                      아이디
+                      {s.login.labelId}
                     </Text>
                     <View className="h-10 rounded-md border border-[rgba(0,9,50,0.12)] bg-white/90 px-2">
                       <TextInput
                         className="h-full flex-1 px-2 text-base text-[#1c2024]"
                         style={{ lineHeight: 22, letterSpacing: -0.4 }}
-                        placeholder="아이디를 입력하세요."
+                        placeholder={s.login.placeholderIdLogin}
                         placeholderTextColor="rgba(0, 5, 29, 0.45)"
                         value={userId}
-                        onChangeText={setUserId}
+                        onChangeText={(t) => {
+                          setUserId(t);
+                          setLoginError(null);
+                        }}
                         autoCapitalize="none"
                         autoCorrect={false}
                         textContentType="username"
@@ -147,16 +178,19 @@ export default function LoginScreen() {
                     <Text
                       className="w-full font-medium text-[#1c2024]"
                       style={{ fontSize: 16, lineHeight: 25.6, letterSpacing: -0.4 }}>
-                      비밀번호
+                      {s.login.labelPassword}
                     </Text>
                     <View className="h-10 rounded-md border border-[rgba(0,9,50,0.12)] bg-white/90 px-2">
                       <TextInput
                         className="h-full flex-1 px-2 text-base text-[#1c2024]"
                         style={{ lineHeight: 22, letterSpacing: -0.4 }}
-                        placeholder="비밀번호를 입력하세요."
+                        placeholder={s.login.placeholderPassword}
                         placeholderTextColor="rgba(0, 5, 29, 0.45)"
                         value={password}
-                        onChangeText={setPassword}
+                        onChangeText={(t) => {
+                          setPassword(t);
+                          setLoginError(null);
+                        }}
                         secureTextEntry
                         textContentType="password"
                         autoCapitalize="none"
@@ -170,13 +204,13 @@ export default function LoginScreen() {
                     <Text
                       className="w-full font-medium text-[#1c2024]"
                       style={{ fontSize: 16, lineHeight: 25.6, letterSpacing: -0.4 }}>
-                      인증번호
+                      {s.login.labelOtp}
                     </Text>
                     <View className="h-10 rounded-md border border-[rgba(0,9,50,0.12)] bg-white/90 px-2">
                       <TextInput
                         className="h-full flex-1 px-2 text-base text-[#1c2024]"
                         style={{ lineHeight: 22, letterSpacing: -0.4 }}
-                        placeholder="인증번호를 입력해주세요."
+                        placeholder={s.login.placeholderOtp}
                         placeholderTextColor="rgba(0, 5, 29, 0.45)"
                         value={otpCode}
                         onChangeText={setOtpCode}
@@ -189,13 +223,13 @@ export default function LoginScreen() {
                     <Text
                       className="w-full font-medium text-[#1c2024]"
                       style={{ fontSize: 16, lineHeight: 25.6, letterSpacing: -0.4 }}>
-                      휴대폰 번호
+                      {s.login.labelPhone}
                     </Text>
                     <View className="h-10 rounded-md border border-[rgba(0,9,50,0.12)] bg-white/90 px-2">
                       <TextInput
                         className="h-full flex-1 px-2 text-base text-[#1c2024]"
                         style={{ lineHeight: 22, letterSpacing: -0.4 }}
-                        placeholder="01012345678 형식으로 입력해주세요."
+                        placeholder={s.login.placeholderPhone}
                         placeholderTextColor="rgba(0, 5, 29, 0.45)"
                         value={phone}
                         onChangeText={setPhone}
@@ -208,13 +242,13 @@ export default function LoginScreen() {
                     <Text
                       className="w-full font-medium text-[#1c2024]"
                       style={{ fontSize: 16, lineHeight: 25.6, letterSpacing: -0.4 }}>
-                      이름
+                      {s.login.labelName}
                     </Text>
                     <View className="h-10 rounded-md border border-[rgba(0,9,50,0.12)] bg-white/90 px-2">
                       <TextInput
                         className="h-full flex-1 px-2 text-base text-[#1c2024]"
                         style={{ lineHeight: 22, letterSpacing: -0.4 }}
-                        placeholder="이름을 입력해주세요."
+                        placeholder={s.login.placeholderName}
                         placeholderTextColor="rgba(0, 5, 29, 0.45)"
                         value={userName}
                         onChangeText={setUserName}
@@ -225,19 +259,32 @@ export default function LoginScreen() {
                 </>
               )}
 
-              <Link href={'/(main)' as Href} replace asChild>
-                <Pressable
-                  className="h-12 w-full flex-row items-center justify-center gap-3 rounded-lg bg-[#3e63dd] px-6 active:opacity-90"
-                  accessibilityRole="button"
-                  accessibilityLabel="로그인">
-                  <Text
-                    className="font-medium text-white"
-                    style={{ fontSize: 18, lineHeight: 28.8, letterSpacing: -0.45 }}>
-                    로그인
-                  </Text>
-                  <ChevronRight color="#ffffff" size={20} strokeWidth={2} />
-                </Pressable>
-              </Link>
+              {loginError ? (
+                <Text
+                  style={{
+                    fontFamily: 'Pretendard-Regular',
+                    fontSize: 13,
+                    lineHeight: 18,
+                    letterSpacing: -0.25,
+                    color: '#dc2626',
+                    textAlign: 'center',
+                  }}>
+                  {loginError}
+                </Text>
+              ) : null}
+
+              <Pressable
+                onPress={handleLogin}
+                className="h-12 w-full flex-row items-center justify-center gap-3 rounded-lg bg-[#3e63dd] px-6 active:opacity-90"
+                accessibilityRole="button"
+                accessibilityLabel={s.login.button}>
+                <Text
+                  className="font-medium text-white"
+                  style={{ fontSize: 18, lineHeight: 28.8, letterSpacing: -0.45 }}>
+                  {s.login.button}
+                </Text>
+                <ChevronRight color="#ffffff" size={20} strokeWidth={2} />
+              </Pressable>
 
               <Pressable className="items-center py-0.5" hitSlop={8}>
                 <Text
@@ -248,7 +295,7 @@ export default function LoginScreen() {
                     letterSpacing: -0.35,
                     color: 'rgba(0, 7, 20, 0.62)',
                   }}>
-                  문의하기
+                  {s.login.contact}
                 </Text>
               </Pressable>
             </View>

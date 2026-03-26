@@ -29,18 +29,32 @@ export type TbmItem = {
   riskFactors: string[];
   safetyMeasures: string[];
   checklist: { id: string; label: string; done: boolean }[];
+  /**
+   * 이전 기록 목록에 노출 — 오늘 날짜이지만 참여 완료해 과거 기록처럼 볼 때
+   * (과거 날짜 TBM은 별도 플래그 없이 항상 목록에 포함)
+   */
+  appearsInHistoryList?: boolean;
+  /** 완료·참여 시 서명 목업(SVG Path d). 미참여/미완료는 없음 */
+  signatureSvgPaths?: string[];
 };
+
+/** 목업 서명 필기 (실제 저장 서명 연동 시 교체) */
+export const DEFAULT_MOCK_SIGNATURE_PATHS = [
+  "M 12 52 C 28 28 48 28 68 52 S 108 58 132 44",
+  "M 96 36 Q 118 22 138 34",
+  "M 104 48 L 128 36",
+];
 
 export const MOCK_TBMS: TbmItem[] = [
   {
     id: "1",
     title: "철골 조립 작업 TBM",
-    siteName: "○○현장",
-    workArea: "동관 3층 데크플레이트",
+    siteName: "세이프틱스 강남 사업장",
+    workArea: "",
     scheduledAt: "2026-03-25T09:00:00",
     supervisor: "김안전",
     attendeeCount: 12,
-    status: "scheduled",
+    status: "completed",
     workSummary: "데크플레이트 거치 및 볼트 체결. 크레인 협업 및 고소작업 병행.",
     cautionItems: [
       {
@@ -48,21 +62,21 @@ export const MOCK_TBMS: TbmItem[] = [
         hazardFactor: "소음 환경",
         harmfulFactor: "소음",
         question: "소음 작업 구역에서 청력 보호구를 착용하고 있습니까?",
-        done: false,
+        done: true,
       },
       {
         id: "ca2",
         hazardFactor: "진동 장비",
         harmfulFactor: "진동",
         question: "진동이 발생하는 장비 사용 시 안전 수칙을 확인하셨습니까?",
-        done: false,
+        done: true,
       },
       {
         id: "ca3",
         hazardFactor: "고소 작업",
         harmfulFactor: "추락 위험",
         question: "고소 작업 시 안전대를 착용하고 생명줄에 걸어두었습니까?",
-        done: false,
+        done: true,
       },
     ],
     ppeItems: [
@@ -71,39 +85,48 @@ export const MOCK_TBMS: TbmItem[] = [
         hazardFactor: "분진 환경",
         harmfulFactor: "흡입 위험",
         question: "분진 발생 작업 시 방진마스크를 착용하고 있습니까?",
-        done: false,
+        done: true,
       },
       {
         id: "pp2",
         hazardFactor: "고온 환경",
         harmfulFactor: "일사병/화상",
         question: "고온 작업 환경에서 충분한 수분 섭취 및 휴식을 취하고 있습니까?",
-        done: false,
+        done: true,
       },
       {
         id: "pp3",
         hazardFactor: "낙하물 위험",
         harmfulFactor: "두부 충격",
         question: "안전모를 올바르게 착용하고 턱끈을 조여두었습니까?",
-        done: false,
+        done: true,
       },
     ],
     specialNotice:
-      "오늘 동관 3층에서 타워크레인 인양 작업이 진행됩니다. 작업 반경(30m) 내 무단 접근을 금지합니다. 작업 시작 전 반드시 신호수와 눈맞춤 확인을 해주세요. 강풍 주의보 발령 시 즉시 작업을 중단하고 관리자에게 보고하십시오.",
-    riskFactors: ["낙하물에 의한 타박상", "크레인 호이스트와의 충돌", "고소 작업 시 추락"],
-    safetyMeasures: ["안전대 착용 및 생명줄 고정 확인", "작업구역 통제 및 유도자 배치", "크레인 신호수 지정 및 호각·무전 연락"],
+      "금일 작업 구역에서 타워크레인 인양 작업이 진행됩니다. 작업 반경 내 무단 접근을 금지합니다. 작업 시작 전 신호수와 눈맞춤 확인을 해 주세요. 강풍 주의보 시 즉시 작업 중단 후 관리자에게 보고하십시오.",
+    riskFactors: [
+      "소음·진동·고소 작업에 따른 청력 손상·추락·낙하물",
+      "크레인 인양 경로 하부 및 협착 구역 내 충돌",
+      "데크플레이트 거치·볼트 체결 시 재료·공구 낙하",
+    ],
+    safetyMeasures: [
+      "청력 보호구·안전대 착용 및 생명줄(이중 걸이) 확인",
+      "인양 반경 통제·신호수 배치·호각·무전 연락 체계 유지",
+      "크레인 정격 하중·아웃리거·지반 상태 사전 점검",
+    ],
+    signatureSvgPaths: DEFAULT_MOCK_SIGNATURE_PATHS,
     checklist: [
       { id: "c1", label: "개인보호구(PPE) 착용 확인", done: true },
       { id: "c2", label: "비상연락망 공유", done: true },
-      { id: "c3", label: "위험성평가 내용 숙지", done: false },
-      { id: "c4", label: "작업허가서 확인", done: false },
+      { id: "c3", label: "위험성평가 내용 숙지", done: true },
+      { id: "c4", label: "작업허가서 확인", done: true },
     ],
   },
   {
     id: "2",
     title: "전기 분전반 점검 TBM",
-    siteName: "○○현장",
-    workArea: "기계실 MCC",
+    siteName: "세이프틱스 강남 사업장",
+    workArea: "",
     scheduledAt: "2026-03-24T16:30:00",
     supervisor: "이전기",
     attendeeCount: 5,
@@ -141,9 +164,11 @@ export const MOCK_TBMS: TbmItem[] = [
         done: true,
       },
     ],
-    specialNotice: "금일 MCC 패널 A-3 구역 정전 작업이 예정되어 있습니다. 해당 구역 내 모든 전원 차단 여부를 반드시 이중으로 확인하십시오.",
-    riskFactors: ["감전", "아크섬광에 의한 화상"],
-    safetyMeasures: ["LOTO(잠금·꼬리표) 절차 준수", "절연용 보호구 착용", "점검 구역 이중 표지"],
+    specialNotice:
+      "금일 분전반 점검 구역 정전 작업이 예정되어 있습니다. 해당 구역 내 모든 전원 차단 여부를 반드시 이중으로 확인하십시오.",
+    riskFactors: ["활선·접촉에 의한 감전", "아크 방전에 의한 화상·눈 손상", "측정·시운전 시 오인 투입"],
+    safetyMeasures: ["LOTO(잠금·꼬리표) 절차 준수", "절연 보호구·아크 방호구 착용", "점검 구역 출입 통제 및 표지"],
+    signatureSvgPaths: DEFAULT_MOCK_SIGNATURE_PATHS,
     checklist: [
       { id: "c1", label: "LOTO 적용 확인", done: true },
       { id: "c2", label: "측정기기 교정 유효기간", done: true },
@@ -152,12 +177,13 @@ export const MOCK_TBMS: TbmItem[] = [
   {
     id: "3",
     title: "콘크리트 타설 TBM",
-    siteName: "△△현장",
-    workArea: "지하1층 슬래브",
+    siteName: "세이프틱스 강남 사업장",
+    workArea: "",
     scheduledAt: "2026-03-26T08:00:00",
     supervisor: "박현장",
     attendeeCount: 18,
-    status: "scheduled",
+    status: "completed",
+    appearsInHistoryList: true,
     workSummary: "펌프카 타설, 진동다짐 및 양생 필름 시공.",
     cautionItems: [
       {
@@ -165,14 +191,14 @@ export const MOCK_TBMS: TbmItem[] = [
         hazardFactor: "펌프카 운전",
         harmfulFactor: "협착·충돌",
         question: "펌프카 붐대 선회 반경 내 작업자 출입을 통제하고 있습니까?",
-        done: false,
+        done: true,
       },
       {
         id: "ca2",
         hazardFactor: "습식 콘크리트",
         harmfulFactor: "피부 화학 화상",
         question: "콘크리트 직접 접촉 방지를 위한 방수 장갑 및 장화를 착용하고 있습니까?",
-        done: false,
+        done: true,
       },
     ],
     ppeItems: [
@@ -181,29 +207,31 @@ export const MOCK_TBMS: TbmItem[] = [
         hazardFactor: "분진 환경",
         harmfulFactor: "호흡기 자극",
         question: "시멘트 분진이 발생하는 구역에서 방진마스크를 착용하고 있습니까?",
-        done: false,
+        done: true,
       },
       {
         id: "pp2",
         hazardFactor: "미끄러운 노면",
         harmfulFactor: "미끄러짐·넘어짐",
         question: "미끄럼 방지 안전화를 착용하고 작업통로를 확인하셨습니까?",
-        done: false,
+        done: true,
       },
     ],
-    specialNotice: "금일 타설 물량: B1 슬래브 280㎥. 펌프카 2대 동시 운영 예정으로 신호수 각 1명씩 배치 필수. 양생 기간 중 차량 통행을 금지합니다.",
-    riskFactors: ["펌프 라인 파열", "미끄러짐·넘어짐", "먼지"],
-    safetyMeasures: ["펌프카 아웃리거 패드 및 지반 확인", "작업통로 정돈 및 조명 확보", "방진마스크 착용"],
+    specialNotice:
+      "금일 타설 물량이 확정되었습니다. 펌프카 2대 동시 운영 예정으로 신호수 각 1명씩 배치합니다. 양생 기간 중 해당 구역 차량 통행을 금지합니다.",
+    riskFactors: ["펌프 라인·호스 파열·협착", "습식 콘크리트 화학·미끄럼", "분진·소음"],
+    safetyMeasures: ["펌프카 아웃리거·지반·붐 반경 확인", "작업통로·조명 확보 및 방진마스크", "양생·배수 계획 공유"],
+    signatureSvgPaths: DEFAULT_MOCK_SIGNATURE_PATHS,
     checklist: [
-      { id: "c1", label: "펌프카 세팅 검사", done: false },
-      { id: "c2", label: "배수·양생 계획 공유", done: false },
+      { id: "c1", label: "펌프카 세팅 검사", done: true },
+      { id: "c2", label: "배수·양생 계획 공유", done: true },
     ],
   },
   {
     id: "4",
     title: "비계 해체 작업 TBM",
-    siteName: "○○현장",
-    workArea: "서관 외벽",
+    siteName: "세이프틱스 강남 사업장",
+    workArea: "",
     scheduledAt: "2026-03-23T08:30:00",
     supervisor: "정비계",
     attendeeCount: 8,
@@ -241,7 +269,8 @@ export const MOCK_TBMS: TbmItem[] = [
         done: false,
       },
     ],
-    specialNotice: "서관 외벽 비계 해체 시 인근 도로(서관 남측)로 낙하물이 유입될 수 있습니다. 작업 시간 중 해당 도로 양방향 일시 통제를 실시합니다. 통제 인원 2명 배치 필수.",
+    specialNotice:
+      "비계 해체 시 인근 도로로 낙하물이 유입될 수 있습니다. 작업 시간 중 해당 도로 일시 통제를 실시하며, 통제 인원을 배치합니다.",
     riskFactors: ["추락", "낙하물", "구조물 붕괴"],
     safetyMeasures: ["해체 순서 준수", "안전대 이중 걸이", "자재 반출 통로 확보"],
     checklist: [
@@ -252,8 +281,8 @@ export const MOCK_TBMS: TbmItem[] = [
   {
     id: "5",
     title: "배관 용접 TBM",
-    siteName: "△△현장",
-    workArea: "기계실 B2",
+    siteName: "세이프틱스 강남 사업장",
+    workArea: "",
     scheduledAt: "2026-03-22T09:00:00",
     supervisor: "최용접",
     attendeeCount: 6,
@@ -291,7 +320,8 @@ export const MOCK_TBMS: TbmItem[] = [
         done: true,
       },
     ],
-    specialNotice: "B2 기계실 내 산소 농도 측정 결과 18% 이상 확인 후 작업 진입 가능. 산소 결핍 또는 가연성 가스 검지 시 즉시 대피하고 관리자에게 보고하십시오.",
+    specialNotice:
+      "기계실 내 산소 농도 측정 결과 기준을 충족한 뒤 작업에 진입합니다. 산소 결핍 또는 가연성 가스 검지 시 즉시 대피하고 관리자에게 보고하십시오.",
     riskFactors: ["화상", "유해가스 흡입", "화재"],
     safetyMeasures: ["화기작업 허가서 발급", "소화기 비치", "환기 설비 가동"],
     checklist: [
@@ -302,8 +332,8 @@ export const MOCK_TBMS: TbmItem[] = [
   {
     id: "6",
     title: "크레인 작업 TBM",
-    siteName: "○○현장",
-    workArea: "중앙 타워",
+    siteName: "세이프틱스 강남 사업장",
+    workArea: "",
     scheduledAt: "2026-03-21T07:30:00",
     supervisor: "윤크레인",
     attendeeCount: 10,
@@ -352,8 +382,8 @@ export const MOCK_TBMS: TbmItem[] = [
   {
     id: "7",
     title: "도장 작업 TBM",
-    siteName: "△△현장",
-    workArea: "지상 2층 내부",
+    siteName: "세이프틱스 강남 사업장",
+    workArea: "",
     scheduledAt: "2026-03-20T08:00:00",
     supervisor: "한도장",
     attendeeCount: 7,
@@ -402,8 +432,8 @@ export const MOCK_TBMS: TbmItem[] = [
   {
     id: "8",
     title: "굴착 작업 TBM",
-    siteName: "○○현장",
-    workArea: "남측 부지",
+    siteName: "세이프틱스 강남 사업장",
+    workArea: "",
     scheduledAt: "2026-03-19T08:00:00",
     supervisor: "이굴착",
     attendeeCount: 9,
@@ -441,7 +471,8 @@ export const MOCK_TBMS: TbmItem[] = [
         done: true,
       },
     ],
-    specialNotice: "남측 부지 굴착 심도 GL-4.5m 예정. 인근 기존 건물(A동) 기초로부터 2m 이격 거리를 반드시 유지하십시오. 강우 후 굴착면 상태를 재점검한 후 작업을 재개합니다.",
+    specialNotice:
+      "굴착 심도는 계획서를 따릅니다. 인근 기존 구조물 기초와의 이격 거리를 반드시 유지하십시오. 강우 후 굴착면 상태를 재점검한 뒤 작업을 재개합니다.",
     riskFactors: ["토사 붕괴", "매설물 손상", "장비 전도"],
     safetyMeasures: ["지반 상태 사전 조사", "매설물 위치 확인", "굴착 경사면 관리"],
     checklist: [
@@ -452,8 +483,8 @@ export const MOCK_TBMS: TbmItem[] = [
   {
     id: "9",
     title: "방수 작업 TBM",
-    siteName: "△△현장",
-    workArea: "옥상 슬래브",
+    siteName: "세이프틱스 강남 사업장",
+    workArea: "",
     scheduledAt: "2026-03-18T09:00:00",
     supervisor: "박방수",
     attendeeCount: 5,
@@ -502,8 +533,8 @@ export const MOCK_TBMS: TbmItem[] = [
   {
     id: "10",
     title: "철근 가공 TBM",
-    siteName: "○○현장",
-    workArea: "가공장",
+    siteName: "세이프틱스 강남 사업장",
+    workArea: "",
     scheduledAt: "2026-03-17T08:30:00",
     supervisor: "송철근",
     attendeeCount: 6,
@@ -573,4 +604,10 @@ export function formatTbmDate(iso: string): string {
   const m = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");
   return `${y}.${m}.${day}`;
+}
+
+/** TBM 기록 상세에 표시할 서명 경로 (완료·참여 시) */
+export function getHistorySignaturePaths(tbm: TbmItem): string[] | null {
+  if (tbm.status !== "completed") return null;
+  return tbm.signatureSvgPaths?.length ? tbm.signatureSvgPaths : DEFAULT_MOCK_SIGNATURE_PATHS;
 }

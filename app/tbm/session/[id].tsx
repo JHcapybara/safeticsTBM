@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   ChevronRight,
   CloudSun,
+  RefreshCw,
   ShieldCheck,
   Wind,
   XCircle,
@@ -14,7 +15,10 @@ import {
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { SITE_LOCATION_CITY } from '@/constants/site';
 import { getTbmById } from '@/constants/tbm';
+import { useLang } from '@/contexts/LangContext';
+import { useCurrentWeather } from '@/hooks/useCurrentWeather';
 
 /** TBM-02 — Today's TBM 개요 화면 (Figma node 71:1962) */
 
@@ -55,6 +59,8 @@ export default function TbmSessionScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { s } = useLang();
+  const { weather, weatherLoading, refreshWeather } = useCurrentWeather();
 
   const tbm = id ? getTbmById(String(id)) : undefined;
 
@@ -65,9 +71,9 @@ export default function TbmSessionScreen() {
   if (!tbm) {
     return (
       <View className="flex-1 items-center justify-center bg-[#fbfdff]">
-        <Text style={{ fontFamily: 'Pretendard-Regular', color: '#64748b' }}>TBM을 찾을 수 없습니다.</Text>
+        <Text style={{ fontFamily: 'Pretendard-Regular', color: '#64748b' }}>{s.tbm.notFound}</Text>
         <Pressable onPress={() => router.back()} className="mt-4 rounded-xl bg-[#3e63dd] px-6 py-3">
-          <Text style={{ fontFamily: 'Pretendard-SemiBold', color: '#ffffff' }}>돌아가기</Text>
+          <Text style={{ fontFamily: 'Pretendard-SemiBold', color: '#ffffff' }}>{s.common.goBack}</Text>
         </Pressable>
       </View>
     );
@@ -82,7 +88,7 @@ export default function TbmSessionScreen() {
   const checklistCategories = [
     {
       id: 'caution',
-      label: '주의사항',
+      label: s.checklist.cautions,
       count: tbm.cautionItems.length,
       icon: AlertTriangle,
       iconColor: '#d97706',
@@ -95,7 +101,7 @@ export default function TbmSessionScreen() {
     },
     {
       id: 'ppe',
-      label: '개인안전보호구(PPE)',
+      label: s.checklist.ppe,
       count: tbm.ppeItems.length,
       icon: ShieldCheck,
       iconColor: '#0d9488',
@@ -108,7 +114,7 @@ export default function TbmSessionScreen() {
     },
     {
       id: 'notice',
-      label: '오늘의 특별 공지',
+      label: s.checklist.specialNotice,
       count: 1,
       icon: Bell,
       iconColor: '#3e63dd',
@@ -137,7 +143,7 @@ export default function TbmSessionScreen() {
           </Pressable>
           <View className="flex-1 items-center justify-center">
             <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 20, letterSpacing: -0.5, color: '#ffffff' }}>
-              Today's TBM
+              {s.tbm.sessionTitle}
             </Text>
           </View>
           <View className="h-10 w-10" />
@@ -173,10 +179,10 @@ export default function TbmSessionScreen() {
             style={{ padding: 16, gap: 10 }}>
             {/* 헤더 행 */}
             <View className="flex-row items-center justify-between">
-              <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 13, letterSpacing: -0.3, color: 'rgba(0,7,20,0.45)' }}>
-                기본 정보
+              <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 13, lineHeight: 16, letterSpacing: -0.3, color: 'rgba(0,7,20,0.45)' }}>
+                {s.tbm.basicInfo}
               </Text>
-              <Text style={{ fontFamily: 'Pretendard-Medium', fontSize: 13, letterSpacing: -0.3, color: '#1c2024' }}>
+              <Text style={{ fontFamily: 'Pretendard-Medium', fontSize: 13, lineHeight: 16, letterSpacing: -0.3, color: '#1c2024' }}>
                 {formatDateKR(tbm.scheduledAt)}
               </Text>
             </View>
@@ -189,18 +195,18 @@ export default function TbmSessionScreen() {
               <View
                 className="items-center justify-center overflow-hidden rounded-xl"
                 style={{ width: 44, height: 44, backgroundColor: '#3e63dd' }}>
-                <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 18, color: '#ffffff' }}>
+                <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 18, lineHeight: 22, color: '#ffffff' }}>
                   {tbm.supervisor.charAt(0)}
                 </Text>
               </View>
 
               {/* 이름 + 역할 */}
               <View style={{ gap: 3, flex: 1 }}>
-                <Text style={{ fontFamily: 'Pretendard-SemiBold', fontSize: 15, letterSpacing: -0.35, color: '#1c2024' }}>
+                <Text style={{ fontFamily: 'Pretendard-SemiBold', fontSize: 15, lineHeight: 18, letterSpacing: -0.35, color: '#1c2024' }}>
                   {tbm.supervisor}
                 </Text>
-                <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 13, letterSpacing: -0.25, color: 'rgba(0,7,20,0.55)' }}>
-                  작업 책임자 · {tbm.attendeeCount}명 참석
+                <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 13, lineHeight: 16, letterSpacing: -0.25, color: 'rgba(0,7,20,0.55)' }}>
+                  {s.tbm.workManager} · {tbm.attendeeCount}명 참석
                 </Text>
               </View>
 
@@ -209,10 +215,10 @@ export default function TbmSessionScreen() {
 
               {/* 관리 감독자 */}
               <View className="items-end" style={{ gap: 4 }}>
-                <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 12, letterSpacing: -0.2, color: 'rgba(0,7,20,0.5)' }}>
-                  관리 감독자
+                <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 12, lineHeight: 14, letterSpacing: -0.2, color: 'rgba(0,7,20,0.5)' }}>
+                  {s.tbm.supervisingManager}
                 </Text>
-                <Badge label="TBM 책임자" variant="green" />
+                <Badge label={s.tbm.tbmManager} variant="green" />
               </View>
             </View>
           </LinearGradient>
@@ -235,12 +241,24 @@ export default function TbmSessionScreen() {
             end={{ x: 1, y: 1 }}
             style={{ padding: 16, gap: 12 }}>
             <View className="flex-row items-center justify-between">
-              <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 13, letterSpacing: -0.3, color: 'rgba(0,7,20,0.45)' }}>
-                현장 날씨
+              <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 13, lineHeight: 16, letterSpacing: -0.3, color: 'rgba(0,7,20,0.45)' }}>
+                {s.weather.title}
               </Text>
-              <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 11, letterSpacing: -0.2, color: 'rgba(0,7,20,0.35)' }}>
-                강남구 · 실시간
-              </Text>
+              <View className="flex-row items-center gap-1.5">
+                <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 11, lineHeight: 13, letterSpacing: -0.2, color: 'rgba(0,7,20,0.35)' }}>
+                  {(weather?.locationLabel ?? SITE_LOCATION_CITY)} · {s.weather.realtime}
+                </Text>
+                <Pressable
+                  onPress={() => void refreshWeather()}
+                  disabled={weatherLoading}
+                  accessibilityRole="button"
+                  accessibilityLabel={s.weather.refreshA11y}
+                  hitSlop={8}
+                  className="rounded-md border border-[rgba(0,0,47,0.08)] bg-white/90 p-1.5 active:opacity-70"
+                  style={{ opacity: weatherLoading ? 0.5 : 1 }}>
+                  <RefreshCw color="#3e63dd" size={16} strokeWidth={2} />
+                </Pressable>
+              </View>
             </View>
 
             <View style={{ height: 1, backgroundColor: 'rgba(0,0,47,0.06)' }} />
@@ -255,10 +273,10 @@ export default function TbmSessionScreen() {
                 </View>
                 <View style={{ gap: 2 }}>
                   <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 22, letterSpacing: -0.6, color: '#1c2024', lineHeight: 28 }}>
-                    32°C
+                    {weather ? `${Math.round(weather.tempC)}°C` : '--°C'}
                   </Text>
-                  <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 13, letterSpacing: -0.2, color: 'rgba(0,7,20,0.55)' }}>
-                    비 예보
+                  <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 13, lineHeight: 16, letterSpacing: -0.2, color: 'rgba(0,7,20,0.55)' }}>
+                    {weather ? weather.conditionLabel : weatherLoading ? s.weather.loading : s.weather.unavailable}
                   </Text>
                 </View>
               </View>
@@ -272,10 +290,10 @@ export default function TbmSessionScreen() {
                 </View>
                 <View style={{ gap: 2 }}>
                   <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 22, letterSpacing: -0.6, color: '#1c2024', lineHeight: 28 }}>
-                    15km/h
+                    {weather ? `${Math.round(weather.windKmh)}km/h` : '--km/h'}
                   </Text>
-                  <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 13, letterSpacing: -0.2, color: 'rgba(0,7,20,0.55)' }}>
-                    강한 바람
+                  <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 13, lineHeight: 16, letterSpacing: -0.2, color: 'rgba(0,7,20,0.55)' }}>
+                    {weather ? `${s.weather.humidity} ${Math.round(weather.humidity)}%` : s.weather.loading}
                   </Text>
                 </View>
               </View>
@@ -299,13 +317,13 @@ export default function TbmSessionScreen() {
           }}>
           {/* 섹션 헤더 */}
           <View className="flex-row items-center justify-between">
-            <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 13, letterSpacing: -0.3, color: 'rgba(0,7,20,0.45)' }}>
-              체크리스트
-            </Text>
+              <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 13, lineHeight: 16, letterSpacing: -0.3, color: 'rgba(0,7,20,0.45)' }}>
+                {s.tbm.checklist}
+              </Text>
             <View
               className="overflow-hidden rounded-full"
               style={{ backgroundColor: 'rgba(0,0,51,0.05)', paddingHorizontal: 8, paddingVertical: 3 }}>
-              <Text style={{ fontFamily: 'Pretendard-Medium', fontSize: 12, letterSpacing: -0.25, color: 'rgba(0,7,20,0.5)' }}>
+              <Text style={{ fontFamily: 'Pretendard-Medium', fontSize: 12, lineHeight: 14, letterSpacing: -0.25, color: 'rgba(0,7,20,0.5)' }}>
                 {doneItems} / {totalItems} 완료
               </Text>
             </View>
@@ -340,7 +358,7 @@ export default function TbmSessionScreen() {
                   {/* 레이블 */}
                   <Text
                     className="flex-1"
-                    style={{ fontFamily: 'Pretendard-Regular', fontSize: 14, letterSpacing: -0.35, color: 'rgba(0,7,20,0.7)' }}
+                    style={{ fontFamily: 'Pretendard-Regular', fontSize: 14, lineHeight: 17, letterSpacing: -0.35, color: 'rgba(0,7,20,0.7)' }}
                     numberOfLines={1}>
                     {cat.label}
                   </Text>
@@ -361,18 +379,19 @@ export default function TbmSessionScreen() {
 
           {/* 전체 합계 */}
           <View className="flex-row items-center justify-between">
-            <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 14, letterSpacing: -0.35, color: 'rgba(0,7,20,0.55)' }}>
-              전체 합계
+            <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 14, lineHeight: 17, letterSpacing: -0.35, color: 'rgba(0,7,20,0.55)' }}>
+              {s.tbm.totalSummary}
             </Text>
             <View className="flex-row items-center" style={{ gap: 8 }}>
               <Badge label={`${doneItems} / ${totalItems} 건`} variant="gray" />
               <Text style={{
                 fontFamily: 'Pretendard-SemiBold',
                 fontSize: 13,
+                lineHeight: 16,
                 letterSpacing: -0.3,
                 color: overallPct >= 1 ? '#15803d' : tbm.status === 'incomplete' ? '#b91c1c' : '#3e63dd',
               }}>
-                {overallPct >= 1 ? '완료' : tbm.status === 'incomplete' ? '미완료' : '진행 중'}
+                {overallPct >= 1 ? s.status.completed : tbm.status === 'incomplete' ? s.status.incomplete : s.common.inProgress}
               </Text>
             </View>
           </View>
@@ -397,9 +416,9 @@ export default function TbmSessionScreen() {
           <Pressable
             className="h-12 w-full flex-row items-center justify-center gap-2 rounded-lg bg-[#3e63dd] active:opacity-90"
             accessibilityRole="button"
-            accessibilityLabel="TBM 시작하기">
+            accessibilityLabel={s.tbm.startButton}>
             <Text style={{ fontFamily: 'Pretendard-Medium', fontSize: 18, letterSpacing: -0.45, color: '#ffffff', lineHeight: 29 }}>
-              시작하기
+              {s.tbm.startSession}
             </Text>
             <ChevronRight color="#ffffff" size={20} strokeWidth={2.5} />
           </Pressable>

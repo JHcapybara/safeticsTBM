@@ -9,6 +9,10 @@ import { View } from 'react-native';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/components/useColorScheme';
+import { AuthProvider } from '@/contexts/AuthContext';
+import { LangProvider } from '@/contexts/LangContext';
+import { SuggestionProvider } from '@/contexts/SuggestionContext';
+import { WeatherProvider } from '@/contexts/WeatherContext';
 
 export { ErrorBoundary } from 'expo-router';
 
@@ -50,6 +54,10 @@ function RootLayoutNav() {
   const pretendardHeader = { fontFamily: 'Pretendard-SemiBold' as const };
 
   return (
+    <LangProvider>
+    <WeatherProvider>
+    <AuthProvider>
+    <SuggestionProvider>
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <View className="flex-1 font-sans" style={{ flex: 1 }}>
         <Stack
@@ -63,17 +71,7 @@ function RootLayoutNav() {
           }}>
           <Stack.Screen name="index" options={{ headerShown: false, animation: 'fade' }} />
           <Stack.Screen name="(main)" options={{ headerShown: false }} />
-          <Stack.Screen
-            name="tbm/[id]"
-            options={{
-              title: 'TBM 상세',
-              headerBackTitle: '목록',
-              headerStyle: { backgroundColor: '#f8fafc' },
-              headerTintColor: '#0f766e',
-              headerTitleStyle: pretendardHeader,
-              headerBackTitleStyle: { fontFamily: 'Pretendard-Regular' },
-            }}
-          />
+          <Stack.Screen name="tbm/[id]" options={{ headerShown: false }} />
           <Stack.Screen
             name="tbm/session/[id]"
             options={{ headerShown: false }}
@@ -85,5 +83,9 @@ function RootLayoutNav() {
         </Stack>
       </View>
     </ThemeProvider>
+    </SuggestionProvider>
+    </AuthProvider>
+    </WeatherProvider>
+    </LangProvider>
   );
 }

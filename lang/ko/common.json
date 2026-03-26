@@ -1,0 +1,217 @@
+{
+  "common": {
+    "login": "로그인",
+    "logout": "로그아웃",
+    "logoutConfirmMessage": "로그아웃 하시겠습니까?",
+    "logoutConfirmYes": "로그아웃",
+    "logoutConfirmNo": "아니오",
+    "goBack": "돌아가기",
+    "backToList": "목록으로 돌아가기",
+    "seeMore": "더보기",
+    "start": "시작하기",
+    "contact": "문의하기",
+    "language": "언어",
+    "korean": "한국어",
+    "english": "English",
+    "default": "기본",
+    "all": "전체",
+    "inProgress": "진행 중"
+  },
+
+  "status": {
+    "completed": "완료",
+    "incomplete": "미완료",
+    "scheduled": "예정",
+    "all": "전체",
+    "actionCompleted": "조치 완료",
+    "actionInProgress": "조치중",
+    "pending": "미조치"
+  },
+
+  "nav": {
+    "home": "홈",
+    "dashboard": "대시보드",
+    "tbm": "Tool Box Meeting",
+    "tbmSubtitle": "작업전 안전회의",
+    "suggestions": "건의사항",
+    "suggestionsSubtitle": "의견 · 요청",
+    "settings": "설정",
+    "settingsSubtitle": "계정 · 알림",
+    "profile": "내 정보"
+  },
+
+  "login": {
+    "title": "Log in",
+    "subtitle": "안전한 현장 관리를 위해 로그인해 주세요.",
+    "tabId": "아이디 로그인",
+    "tabOtp": "인증번호 로그인",
+    "labelId": "아이디",
+    "labelPassword": "비밀번호",
+    "labelOtp": "인증번호",
+    "labelPhone": "휴대폰 번호",
+    "labelName": "이름",
+    "placeholderIdLogin": "아이디를 입력하세요.",
+    "placeholderPassword": "비밀번호를 입력하세요.",
+    "placeholderOtp": "인증번호를 입력해주세요.",
+    "placeholderPhone": "01012345678 형식으로 입력해주세요.",
+    "placeholderName": "이름을 입력해주세요.",
+    "button": "로그인",
+    "contact": "문의하기",
+    "invalidCredentials": "아이디 또는 비밀번호가 올바르지 않습니다.",
+    "otpNotAvailable": "인증번호 로그인은 아직 지원하지 않습니다. 아이디 로그인을 이용해 주세요."
+  },
+
+  "home": {
+    "headerTitle": "세이프틱스 강남 사업장"
+  },
+
+  "drawer": {
+    "welcomeBadge": "WELCOME",
+    "greeting": "안전한 하루 되세요",
+    "currentLocation": "현재 위치",
+    "menuLabel": "MENU"
+  },
+
+  "weather": {
+    "badge": "WEATHER",
+    "title": "현장 날씨",
+    "windSpeed": "풍속",
+    "humidity": "습도",
+    "realtime": "실시간",
+    "feelsLike": "체감",
+    "loading": "날씨 정보를 불러오는 중...",
+    "unavailable": "날씨 정보를 가져오지 못했습니다.",
+    "min": "최저",
+    "max": "최고",
+    "refreshA11y": "날씨 새로고침"
+  },
+
+  "tbm": {
+    "title": "Tool Box Meeting",
+    "headerTitle": "Tool Box Meeting",
+    "sessionTitle": "Today's TBM",
+    "todayBadge": "TODAY",
+    "startButton": "TBM 시작하기",
+    "startSession": "시작하기",
+    "notFound": "TBM을 찾을 수 없습니다.",
+    "noTodayTitle": "오늘 예정된 TBM 없음",
+    "noTodayDesc": "오늘 등록된 TBM 일정이 없습니다.\n이전 기록을 확인하거나 담당자에게 문의하세요.",
+    "previousRecords": "이전 기록",
+    "noRecordsForStatus": "해당 상태의 TBM 기록이 없습니다",
+    "checklistProgress": "체크리스트 진행률",
+    "basicInfo": "기본 정보",
+    "workContent": "작업 내용",
+    "riskFactors": "위험 요인",
+    "safetyMeasures": "안전 대책",
+    "checklist": "체크리스트",
+    "totalSummary": "전체 합계",
+    "workManager": "작업 책임자",
+    "tbmManager": "TBM 책임자",
+    "supervisingManager": "관리 감독자",
+    "signatureDemo": "참석 확인 · 서명 (데모)",
+    "todayCardDesc": "금일 TBM 체크리스트와 서명을 완료해 주세요.",
+    "recordDetailTitle": "TBM 기록",
+    "recordSiteLabel": "사업장",
+    "specialNoticeShort": "특별 공지",
+    "signatureSection": "참석 확인 서명",
+    "signatureMissing": "서명 기록이 없습니다. 미참여 또는 미완료일 수 있습니다.",
+    "signatureRecorded": "기록됨"
+  },
+
+  "checklist": {
+    "cautions": "주의사항",
+    "ppe": "개인안전보호구(PPE)",
+    "specialNotice": "오늘의 특별 공지",
+    "todayNoticeLabel": "오늘의 공지사항",
+    "lastItem": "마지막 확인 항목",
+    "signLabel": "서명",
+    "signHere": "서명하기",
+    "resignLabel": "다시 서명",
+    "managerLabel": "책임자",
+    "attendanceAndSign": "참석 확인 및 서명",
+    "allConfirmedBanner": "모든 항목 확인 완료 — 서명하여 TBM을 완료해 주세요.",
+    "disclaimer": "본인은 위 TBM 내용을 모두 확인하였으며 안전 수칙을 준수할 것을 확인합니다.",
+    "completeTbm": "TBM 완료하기",
+    "signBeforeComplete": "서명 후 완료 가능합니다",
+    "confirmAll": "위 내용을 모두 확인함"
+  },
+
+  "emergency": {
+    "hazard": {
+      "badge": "RISK",
+      "title": "위험원 보고",
+      "desc": "미조치 위험원이 있나요?\n관리자에게 즉시 알립니다.",
+      "cta": "탭하여 보고"
+    },
+    "sos": {
+      "badge": "HELP",
+      "title": "긴급 SOS",
+      "desc": "비상벨을 울리고\n관제에 즉시 연결됩니다.",
+      "cta": "탭하여 전송"
+    },
+    "stop": {
+      "badge": "STOP",
+      "title": "작업 중지 요청",
+      "desc": "관리자에게 즉시 알림이 전달되며\n현장 작업을 중단합니다.",
+      "cta": "탭하여 요청"
+    }
+  },
+
+  "suggestions": {
+    "badge": "SUGGESTIONS",
+    "title": "건의사항",
+    "categoryLabel": "건의 · 소통",
+    "recent": "최근 건의",
+    "viewAll": "전체 건의사항 보기",
+    "myPosts": "내가 쓴 글",
+    "newPost": "새 건의",
+    "noResults": "이 필터에 해당하는 건의가 없습니다.",
+    "totalCount": "총 {n}건",
+    "detailSuggestionNo": "건의번호",
+    "detailStatus": "상태",
+    "detailGroup": "그룹 구분",
+    "detailAuthor": "등록자",
+    "detailCreatedAt": "등록일",
+    "detailSuggestion": "건의사항 내용",
+    "detailActionHistory": "조치 이력",
+    "detailNoActionHistory": "등록된 조치 이력이 없습니다.",
+    "detailComments": "댓글",
+    "detailCommentPlaceholder": "댓글 내용을 입력해 주세요",
+    "detailPostComment": "댓글 등록",
+    "detailNoComments": "등록된 댓글이 없습니다.",
+    "detailMe": "나",
+    "newGroupLabel": "그룹 구분",
+    "newTitleLabel": "제목",
+    "newTitlePlaceholder": "건의 제목을 입력해 주세요",
+    "newContentLabel": "내용",
+    "newContentPlaceholder": "개선이 필요한 점과 현장 상황을 자세히 작성해 주세요",
+    "newSubmit": "등록",
+    "newSubmitDoneTitle": "등록 완료",
+    "newSubmitDoneMessage": "새 건의가 등록되었습니다.\n(데모: 현재는 목록 데이터에 자동 반영되지 않습니다.)",
+    "confirm": "확인",
+    "groupTbm": "TBM",
+    "groupChecklist": "체크리스트",
+    "groupAccess": "출입",
+    "groupAlert": "알림",
+    "groupUi": "UI",
+    "groupUx": "UX"
+  },
+
+  "profile": {
+    "screenTitle": "내 정보",
+    "siteName": "소속 현장",
+    "role": "권한",
+    "notifications": "알림",
+    "help": "도움말"
+  },
+
+  "settings": {
+    "headerTitle": "설정",
+    "pushAppTitle": "App Push 알림 받기",
+    "pushAppDesc": "App에서 발송하는 Push 알림을 끄고 켤 수 있습니다.\n진동/소리는 디바이스의 설정을 따릅니다.",
+    "pushTbmTitle": "TBM 등록 알림 받기",
+    "pushTbmDesc": "내가 조회할 수 있는 Tool Box Meeting에 새로운 항목이 등록되면 알림을 받습니다.",
+    "backA11y": "뒤로",
+    "menuA11y": "메뉴 열기"
+  }
+}

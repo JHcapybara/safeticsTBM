@@ -3,6 +3,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { CheckCircle2, ChevronRight, ClipboardList } from 'lucide-react-native';
 import { Pressable, Text, View } from 'react-native';
 
+import { useLang } from '@/contexts/LangContext';
+
 type Props = {
   pendingCount?: number;
   dateLabel?: string;
@@ -13,6 +15,7 @@ type Props = {
  * 브랜드 블루 + 라운드·보더·섀도우 리듬을 날씨/긴급 카드와 통일 (NativeWind 토큰)
  */
 export function TbmTodayCard({ pendingCount = 8, dateLabel = '2026.03.25' }: Props) {
+  const { s } = useLang();
   return (
     <View
       className="max-w-[480px] self-center overflow-hidden rounded-2xl border border-[rgba(0,0,47,0.08)] bg-white"
@@ -49,15 +52,17 @@ export function TbmTodayCard({ pendingCount = 8, dateLabel = '2026.03.25' }: Pro
                 style={{
                   fontFamily: 'Pretendard-Medium',
                   fontSize: 11,
+                  lineHeight: 13,
                   letterSpacing: 0.5,
                   color: '#64748b',
                 }}>
-                TODAY
+                {s.tbm.todayBadge}
               </Text>
               <Text
                 style={{
                   fontFamily: 'Pretendard-Bold',
                   fontSize: 13,
+                  lineHeight: 16,
                   letterSpacing: -0.2,
                   color: '#0f172a',
                   marginTop: 2,
@@ -67,7 +72,7 @@ export function TbmTodayCard({ pendingCount = 8, dateLabel = '2026.03.25' }: Pro
             </View>
           </View>
           <View className="rounded-full bg-amber-100 px-2.5 py-1">
-            <Text style={{ fontFamily: 'Pretendard-SemiBold', fontSize: 11, color: '#b45309' }}>
+            <Text style={{ fontFamily: 'Pretendard-SemiBold', fontSize: 11, lineHeight: 13, color: '#b45309' }}>
               확인 {pendingCount}건
             </Text>
           </View>
@@ -80,10 +85,11 @@ export function TbmTodayCard({ pendingCount = 8, dateLabel = '2026.03.25' }: Pro
               style={{
                 fontFamily: 'Pretendard-Bold',
                 fontSize: 20,
+                lineHeight: 24,
                 letterSpacing: -0.45,
                 color: '#0f172a',
               }}>
-              Tool Box Meeting
+              {s.tbm.title}
             </Text>
             <Text
               style={{
@@ -94,7 +100,7 @@ export function TbmTodayCard({ pendingCount = 8, dateLabel = '2026.03.25' }: Pro
                 marginTop: 6,
                 letterSpacing: -0.2,
               }}>
-              금일 TBM 체크리스트와 서명을 완료해 주세요.
+              {s.tbm.todayCardDesc}
             </Text>
           </View>
         </View>
@@ -115,10 +121,11 @@ export function TbmTodayCard({ pendingCount = 8, dateLabel = '2026.03.25' }: Pro
               style={{
                 fontFamily: 'Pretendard-SemiBold',
                 fontSize: 16,
+                lineHeight: 19,
                 letterSpacing: -0.35,
                 color: '#ffffff',
               }}>
-              TBM 시작하기
+              {s.tbm.startButton}
             </Text>
             <ChevronRight color="#ffffff" size={20} strokeWidth={2.5} />
           </Pressable>

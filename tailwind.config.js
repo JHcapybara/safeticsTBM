@@ -13,6 +13,16 @@ module.exports = {
       fontFamily: {
         sans: ["Pretendard-Regular", "system-ui", "sans-serif"],
       },
+      fontSize: {
+        xs:   ["12px",  { lineHeight: "14.4px" }],
+        sm:   ["14px",  { lineHeight: "16.8px" }],
+        base: ["16px",  { lineHeight: "19.2px" }],
+        lg:   ["18px",  { lineHeight: "21.6px" }],
+        xl:   ["20px",  { lineHeight: "24px"   }],
+        "2xl":["24px",  { lineHeight: "28.8px" }],
+        "3xl":["30px",  { lineHeight: "36px"   }],
+        "4xl":["36px",  { lineHeight: "43.2px" }],
+      },
       colors: {
         tbm: {
           primary: "#0d9488",
@@ -31,20 +41,20 @@ module.exports = {
     plugin(({ addUtilities }) => {
       addUtilities({
         ".font-normal": {
-          fontFamily: "Pretendard-Regular",
-          fontWeight: "400",
+          "font-family": "Pretendard-Regular",
+          "font-weight": "400",
         },
         ".font-medium": {
-          fontFamily: "Pretendard-Medium",
-          fontWeight: "500",
+          "font-family": "Pretendard-Medium",
+          "font-weight": "500",
         },
         ".font-semibold": {
-          fontFamily: "Pretendard-SemiBold",
-          fontWeight: "600",
+          "font-family": "Pretendard-SemiBold",
+          "font-weight": "600",
         },
         ".font-bold": {
-          fontFamily: "Pretendard-Bold",
-          fontWeight: "700",
+          "font-family": "Pretendard-Bold",
+          "font-weight": "700",
         },
       });
     }),

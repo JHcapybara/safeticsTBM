@@ -21,14 +21,17 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useAuth } from '@/contexts/AuthContext';
 import { useDrawer } from '@/contexts/DrawerContext';
+import { useLang } from '@/contexts/LangContext';
 
-const DRAWER_WIDTH = Math.min(318, Math.round(Dimensions.get('window').width * 0.88));
+const DRAWER_WIDTH = 256;
 const RADIUS = 22;
 
 type MenuKey = 'home' | 'tbm' | 'suggestions' | 'settings';
@@ -45,9 +48,14 @@ function useActiveMenu(): MenuKey {
 
 export function MainDrawer() {
   const { open, closeDrawer } = useDrawer();
+  const { logout } = useAuth();
+  const { s, lang, setLang } = useLang();
   const insets = useSafeAreaInsets();
+  const { height: windowHeight } = useWindowDimensions();
+  const screenHeight = Math.max(Dimensions.get('screen').height, windowHeight);
   const active = useActiveMenu();
   const [langOpen, setLangOpen] = useState(false);
+  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
   const slide = useSharedValue(DRAWER_WIDTH);
 
   useEffect(() => {
@@ -66,15 +74,30 @@ export function MainDrawer() {
     [closeDrawer],
   );
 
-  const logout = useCallback(() => {
+  const openLogoutConfirm = useCallback(() => {
     closeDrawer();
-    router.replace('/' as Href);
+    setLogoutConfirmOpen(true);
   }, [closeDrawer]);
 
+  const confirmLogout = useCallback(() => {
+    setLogoutConfirmOpen(false);
+    closeDrawer();
+    // 모달/드로어가 언마운트된 뒤 세션 해제 — 동시에 트리가 사라지며 RN Modal이 멈추는 것을 완화
+    // TODO(로그아웃): 여전히 흰 화면만 뜨는 등 문제 있음 — AuthContext.logout 및 (main)/_layout Redirect와 함께 정리 예정
+    setTimeout(() => {
+      logout();
+    }, 300);
+  }, [closeDrawer, logout]);
+
+  const cancelLogout = useCallback(() => {
+    setLogoutConfirmOpen(false);
+  }, []);
+
   return (
+    <>
     <Modal visible={open} transparent animationType="none" onRequestClose={closeDrawer} statusBarTranslucent>
-      <View style={styles.root} pointerEvents="box-none">
-        <Pressable style={StyleSheet.absoluteFill} onPress={closeDrawer} accessibilityLabel="메뉴 닫기">
+      <View style={[styles.root, { height: screenHeight, minHeight: screenHeight }]} pointerEvents="box-none">
+        <Pressable style={StyleSheet.absoluteFill} onPress={closeDrawer} accessibilityLabel={s.nav.home}>
           {Platform.OS === 'web' ? (
             <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(15, 23, 42, 0.5)' }]} />
           ) : (
@@ -87,8 +110,9 @@ export function MainDrawer() {
             styles.panel,
             {
               width: DRAWER_WIDTH,
-              paddingTop: insets.top + 10,
-              paddingBottom: insets.bottom + 10,
+              height: screenHeight,
+              paddingTop: insets.top,
+              paddingBottom: insets.bottom,
             },
             panelStyle,
           ]}>
@@ -118,20 +142,22 @@ export function MainDrawer() {
                     style={{
                       fontFamily: 'Pretendard-Medium',
                       fontSize: 11,
+                      lineHeight: 13,
                       letterSpacing: 2,
                       color: 'rgba(255,255,255,0.75)',
                     }}>
-                    WELCOME
+                    {s.drawer.welcomeBadge}
                   </Text>
                   <Text
                     style={{
                       fontFamily: 'Pretendard-Bold',
                       fontSize: 22,
+                      lineHeight: 26,
                       letterSpacing: -0.5,
                       color: '#ffffff',
                       marginTop: 4,
                     }}>
-                    안전한 하루 되세요
+                    {s.drawer.greeting}
                   </Text>
                 </View>
                 <Pressable
@@ -143,40 +169,29 @@ export function MainDrawer() {
                 </Pressable>
               </View>
 
-              <View className="flex-row items-center gap-3">
-                <View
-                  className="h-[76px] w-[76px] items-center justify-center rounded-2xl border-[3px] border-white/90"
+              <View className="min-w-0">
+                <Text
                   style={{
-                    backgroundColor: 'rgba(255,255,255,0.2)',
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: 0.15,
-                    shadowRadius: 8,
-                  }}>
-                  <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 30, color: '#ffffff' }}>김</Text>
-                </View>
-                <View className="min-w-0 flex-1">
+                    fontFamily: 'Pretendard-Bold',
+                    fontSize: 20,
+                    lineHeight: 24,
+                    letterSpacing: -0.4,
+                    color: '#ffffff',
+                  }}
+                  numberOfLines={1}>
+                  김안전
+                </Text>
+                <View className="mt-2 self-start rounded-full bg-white/20 px-2.5 py-1">
                   <Text
                     style={{
-                      fontFamily: 'Pretendard-Bold',
-                      fontSize: 20,
-                      letterSpacing: -0.4,
-                      color: '#ffffff',
+                      fontFamily: 'Pretendard-Medium',
+                      fontSize: 12,
+                      lineHeight: 14,
+                      color: 'rgba(255,255,255,0.95)',
                     }}
                     numberOfLines={1}>
-                    김안전
+                    세이프틱스 강남 사업장
                   </Text>
-                  <View className="mt-2 self-start rounded-full bg-white/20 px-2.5 py-1">
-                    <Text
-                      style={{
-                        fontFamily: 'Pretendard-Medium',
-                        fontSize: 12,
-                        color: 'rgba(255,255,255,0.95)',
-                      }}
-                      numberOfLines={1}>
-                      세이프틱스 강남 사업장
-                    </Text>
-                  </View>
                 </View>
               </View>
 
@@ -185,8 +200,8 @@ export function MainDrawer() {
                 style={{ backgroundColor: 'rgba(255,255,255,0.14)' }}>
                 <MapPin color="rgba(255,255,255,0.9)" size={18} strokeWidth={2} style={{ marginTop: 2 }} />
                 <View className="min-w-0 flex-1">
-                  <Text style={{ fontFamily: 'Pretendard-Medium', fontSize: 11, color: 'rgba(255,255,255,0.7)' }}>
-                    현재 위치
+                  <Text style={{ fontFamily: 'Pretendard-Medium', fontSize: 11, lineHeight: 13, color: 'rgba(255,255,255,0.7)' }}>
+                    {s.drawer.currentLocation}
                   </Text>
                   <Text
                     style={{
@@ -209,39 +224,40 @@ export function MainDrawer() {
                 style={{
                   fontFamily: 'Pretendard-SemiBold',
                   fontSize: 12,
+                  lineHeight: 14,
                   letterSpacing: 1.2,
                   color: '#94a3b8',
                 }}>
-                MENU
+                {s.drawer.menuLabel}
               </Text>
             </View>
 
             <ScrollView className="flex-1 px-3" showsVerticalScrollIndicator={false} bounces={false}>
               <MenuRow
                 icon={Home}
-                label="홈"
-                subtitle="대시보드"
+                label={s.nav.home}
+                subtitle={s.nav.dashboard}
                 active={active === 'home'}
                 onPress={() => go('/(main)' as Href)}
               />
               <MenuRow
                 icon={Zap}
-                label="Tool Box Meeting"
-                subtitle="작업전 안전회의"
+                label={s.nav.tbm}
+                subtitle={s.nav.tbmSubtitle}
                 active={active === 'tbm'}
                 onPress={() => go('/tbm' as Href)}
               />
               <MenuRow
                 icon={MessageSquare}
-                label="건의사항"
-                subtitle="의견 · 요청"
+                label={s.nav.suggestions}
+                subtitle={s.nav.suggestionsSubtitle}
                 active={active === 'suggestions'}
                 onPress={() => go('/suggestions' as Href)}
               />
               <MenuRow
                 icon={Settings}
-                label="설정"
-                subtitle="계정 · 알림"
+                label={s.nav.settings}
+                subtitle={s.nav.settingsSubtitle}
                 active={active === 'settings'}
                 onPress={() => go('/profile' as Href)}
               />
@@ -255,9 +271,9 @@ export function MainDrawer() {
                   <Globe color="#3e63dd" size={20} strokeWidth={2} />
                 </View>
                 <View className="min-w-0 flex-1 pl-3">
-                  <Text style={{ fontFamily: 'Pretendard-SemiBold', fontSize: 16, color: '#0f172a' }}>언어</Text>
-                  <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 12, color: '#94a3b8', marginTop: 2 }}>
-                    한국어
+                  <Text style={{ fontFamily: 'Pretendard-SemiBold', fontSize: 16, lineHeight: 19, color: '#0f172a' }}>{s.common.language}</Text>
+                  <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 12, lineHeight: 14, color: '#94a3b8', marginTop: 2 }}>
+                    {lang === 'ko' ? s.common.korean : s.common.english}
                   </Text>
                 </View>
                 <View
@@ -269,14 +285,24 @@ export function MainDrawer() {
 
               {langOpen ? (
                 <View className="mb-2 overflow-hidden rounded-xl border border-slate-100 bg-slate-50/80">
-                  <Pressable className="border-b border-slate-100/80 px-4 py-3 active:bg-white/60">
-                    <Text style={{ fontFamily: 'Pretendard-SemiBold', fontSize: 14, color: '#3e63dd' }}>한국어</Text>
-                    <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 11, color: '#94a3b8', marginTop: 2 }}>
-                      기본
+                  <Pressable
+                    className="border-b border-slate-100/80 px-4 py-3 active:bg-white/60"
+                    onPress={() => { setLang('ko'); setLangOpen(false); }}>
+                    <Text style={{ fontFamily: lang === 'ko' ? 'Pretendard-SemiBold' : 'Pretendard-Regular', fontSize: 14, lineHeight: 17, color: lang === 'ko' ? '#3e63dd' : '#334155' }}>
+                      {s.common.korean}
                     </Text>
+                    {lang === 'ko' ? (
+                      <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 11, lineHeight: 13, color: '#94a3b8', marginTop: 2 }}>
+                        {s.common.default}
+                      </Text>
+                    ) : null}
                   </Pressable>
-                  <Pressable className="px-4 py-3 active:bg-white/60">
-                    <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 14, color: '#334155' }}>English</Text>
+                  <Pressable
+                    className="px-4 py-3 active:bg-white/60"
+                    onPress={() => { setLang('en'); setLangOpen(false); }}>
+                    <Text style={{ fontFamily: lang === 'en' ? 'Pretendard-SemiBold' : 'Pretendard-Regular', fontSize: 14, lineHeight: 17, color: lang === 'en' ? '#3e63dd' : '#334155' }}>
+                      {s.common.english}
+                    </Text>
                   </Pressable>
                 </View>
               ) : null}
@@ -284,7 +310,7 @@ export function MainDrawer() {
               <View className="h-2" />
 
               <Pressable
-                onPress={logout}
+                onPress={openLogoutConfirm}
                 className="mb-2 flex-row items-center rounded-2xl border border-red-100 bg-red-50/60 px-3 py-3.5 active:bg-red-50">
                 <View className="h-11 w-11 items-center justify-center rounded-xl bg-red-100/80">
                   <LogOut color="#dc2626" size={20} strokeWidth={2} />
@@ -293,10 +319,11 @@ export function MainDrawer() {
                   style={{
                     fontFamily: 'Pretendard-SemiBold',
                     fontSize: 16,
+                    lineHeight: 19,
                     color: '#b91c1c',
                     marginLeft: 12,
                   }}>
-                  로그아웃
+                  {s.common.logout}
                 </Text>
               </Pressable>
 
@@ -306,6 +333,82 @@ export function MainDrawer() {
         </Animated.View>
       </View>
     </Modal>
+
+    <Modal
+      visible={logoutConfirmOpen}
+      transparent
+      animationType="fade"
+      onRequestClose={cancelLogout}
+      statusBarTranslucent>
+      <View style={{ flex: 1 }}>
+      <Pressable
+        style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(15, 23, 42, 0.45)', zIndex: 0 }]}
+        onPress={cancelLogout}
+        accessibilityRole="button"
+        accessibilityLabel={s.common.logoutConfirmNo}
+      />
+      <View
+        style={[
+          StyleSheet.absoluteFillObject,
+          {
+            zIndex: 1,
+            elevation: 8,
+            justifyContent: 'center',
+            alignItems: 'center',
+            paddingHorizontal: 24,
+          },
+        ]}
+        pointerEvents="box-none">
+        <View
+          className="w-full max-w-[320px] overflow-hidden rounded-2xl bg-white"
+          style={{
+            shadowColor: '#0f172a',
+            shadowOffset: { width: 0, height: 12 },
+            shadowOpacity: 0.15,
+            shadowRadius: 24,
+            elevation: 24,
+          }}
+          pointerEvents="auto">
+          <Text
+            style={{
+              fontFamily: 'Pretendard-SemiBold',
+              fontSize: 17,
+              lineHeight: 24,
+              letterSpacing: -0.35,
+              color: '#0f172a',
+              paddingHorizontal: 20,
+              paddingTop: 22,
+              paddingBottom: 8,
+              textAlign: 'center',
+            }}>
+            {s.common.logoutConfirmMessage}
+          </Text>
+          <View className="mt-2 flex-row border-t border-slate-100">
+            <Pressable
+              onPress={cancelLogout}
+              className="flex-1 items-center justify-center border-r border-slate-100 py-3.5 active:bg-slate-50"
+              accessibilityRole="button"
+              accessibilityLabel={s.common.logoutConfirmNo}>
+              <Text style={{ fontFamily: 'Pretendard-Medium', fontSize: 16, lineHeight: 22, color: '#64748b' }}>
+                {s.common.logoutConfirmNo}
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={confirmLogout}
+              className="flex-1 items-center justify-center py-3.5 active:bg-red-50"
+              accessibilityRole="button"
+              accessibilityLabel={s.common.logoutConfirmYes}
+              hitSlop={8}>
+              <Text style={{ fontFamily: 'Pretendard-SemiBold', fontSize: 16, lineHeight: 22, color: '#b91c1c' }} pointerEvents="none">
+                {s.common.logoutConfirmYes}
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+      </View>
+      </View>
+    </Modal>
+    </>
   );
 }
 
@@ -349,6 +452,7 @@ function MenuRow({
           style={{
             fontFamily: active ? 'Pretendard-SemiBold' : 'Pretendard-Medium',
             fontSize: 16,
+            lineHeight: 19,
             letterSpacing: -0.35,
             color: active ? '#1e3a8a' : '#0f172a',
           }}
@@ -360,6 +464,7 @@ function MenuRow({
             style={{
               fontFamily: 'Pretendard-Regular',
               fontSize: 12,
+              lineHeight: 14,
               color: active ? 'rgba(30,58,138,0.65)' : '#94a3b8',
               marginTop: 2,
             }}
@@ -382,7 +487,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 0,
     top: 0,
-    bottom: 0,
     zIndex: 2,
     elevation: 24,
   },

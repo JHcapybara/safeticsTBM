@@ -1,6 +1,6 @@
 import { Href, Link, router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ChevronRight, CloudSun, Droplets, Menu, MessageSquare, Wind } from 'lucide-react-native';
+import { ChevronRight, CloudSun, Droplets, Menu, MessageSquare, RefreshCw, Wind } from 'lucide-react-native';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Pressable, ScrollView, Text, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -8,6 +8,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SITE_LOCATION_CITY } from '@/constants/site';
 import { getSuggestionStats, MOCK_SUGGESTIONS } from '@/constants/suggestions';
 import { useDrawer } from '@/contexts/DrawerContext';
+import { useLang } from '@/contexts/LangContext';
+import { useCurrentWeather } from '@/hooks/useCurrentWeather';
 import {
   EmergencyActionCard,
   EMERGENCY_CAROUSEL_CARD_WIDTH,
@@ -18,6 +20,8 @@ import { TbmTodayCard } from '@/components/TbmTodayCard';
 /** MAI-01 — Figma node 90:811 */
 export default function HomeScreen() {
   const { openDrawer } = useDrawer();
+  const { s } = useLang();
+  const { weather, weatherLoading, refreshWeather } = useCurrentWeather();
   const suggestionStats = useMemo(() => getSuggestionStats(MOCK_SUGGESTIONS), []);
   const suggestionPreview = useMemo(() => MOCK_SUGGESTIONS.slice(0, 2), []);
   const insets = useSafeAreaInsets();
@@ -49,8 +53,8 @@ export default function HomeScreen() {
         <View className="flex-row items-start gap-2">
           <Text
             className="flex-1 font-bold text-white"
-            style={{ fontSize: 20, lineHeight: 32, letterSpacing: -0.5 }}>
-            세이프틱스 강남 사업장
+            style={{ fontFamily: 'Pretendard-Bold', fontSize: 20, lineHeight: 32, letterSpacing: -0.5 }}>
+            {s.home.headerTitle}
           </Text>
           <Pressable
             onPress={openDrawer}
@@ -104,11 +108,13 @@ export default function HomeScreen() {
                     <View className="min-w-0 flex-1">
                       <Text
                         className="font-semibold text-[#3e63dd]"
-                        style={{ fontSize: 10, letterSpacing: 0.7 }}>
-                        WEATHER
+                        style={{ fontFamily: 'Pretendard-SemiBold', fontSize: 10, lineHeight: 12, letterSpacing: 0.7 }}>
+                        {s.weather.badge}
                       </Text>
-                      <Text className="font-bold text-[#1c2024]" style={{ fontSize: 16, letterSpacing: -0.35, marginTop: 2 }}>
-                        현장 날씨
+                      <Text
+                        className="font-bold text-[#1c2024]"
+                        style={{ fontFamily: 'Pretendard-Bold', fontSize: 16, lineHeight: 19, letterSpacing: -0.35, marginTop: 2 }}>
+                        {s.weather.title}
                       </Text>
                       <Text
                         style={{
@@ -120,25 +126,41 @@ export default function HomeScreen() {
                           letterSpacing: -0.15,
                         }}
                         numberOfLines={2}>
-                        {SITE_LOCATION_CITY}
+                        {weather?.locationLabel ?? SITE_LOCATION_CITY}
                       </Text>
                     </View>
                   </View>
                   <View className="items-end">
+                    <Pressable
+                      onPress={() => void refreshWeather()}
+                      disabled={weatherLoading}
+                      accessibilityRole="button"
+                      accessibilityLabel={s.weather.refreshA11y}
+                      hitSlop={8}
+                      className="mb-1 rounded-lg border border-[rgba(0,0,47,0.08)] bg-white/90 p-2 active:opacity-70"
+                      style={{ opacity: weatherLoading ? 0.5 : 1 }}>
+                      <RefreshCw color="#3e63dd" size={18} strokeWidth={2} />
+                    </Pressable>
                     <View className="flex-row items-end">
                       <Text
                         className="font-bold text-[#0f172a]"
-                        style={{ fontSize: 44, lineHeight: 48, letterSpacing: -1.5 }}>
-                        32
+                        style={{ fontFamily: 'Pretendard-Bold', fontSize: 44, lineHeight: 48, letterSpacing: -1.5 }}>
+                        {weather ? Math.round(weather.tempC) : '--'}
                       </Text>
                       <Text
                         className="mb-1 ml-0.5 font-bold text-[#64748b]"
-                        style={{ fontSize: 18, letterSpacing: -0.4 }}>
+                        style={{ fontFamily: 'Pretendard-Bold', fontSize: 18, lineHeight: 22, letterSpacing: -0.4 }}>
                         °C
                       </Text>
                     </View>
-                    <Text className="text-right text-xs text-[#64748b]" style={{ letterSpacing: -0.15, marginTop: 2 }}>
-                      체감 34° · 미세 보통
+                    <Text
+                      className="text-right text-xs text-[#64748b]"
+                      style={{ fontFamily: 'Pretendard-Regular', letterSpacing: -0.15, marginTop: 2 }}>
+                      {weather
+                        ? `${s.weather.feelsLike} ${Math.round(weather.apparentC)}° · ${weather.conditionLabel}`
+                        : weatherLoading
+                          ? s.weather.loading
+                          : s.weather.unavailable}
                     </Text>
                   </View>
                 </View>
@@ -157,9 +179,15 @@ export default function HomeScreen() {
                       <Wind color="#3e63dd" size={16} strokeWidth={2} />
                     </View>
                     <View>
-                      <Text className="text-[10px] text-[#64748b]">풍속</Text>
-                      <Text className="font-semibold text-[#1c2024]" style={{ fontSize: 14 }}>
-                        15 km/h
+                      <Text
+                        className="text-[10px] text-[#64748b]"
+                        style={{ fontFamily: 'Pretendard-Regular', lineHeight: 12 }}>
+                        {s.weather.windSpeed}
+                      </Text>
+                      <Text
+                        className="font-semibold text-[#1c2024]"
+                        style={{ fontFamily: 'Pretendard-SemiBold', fontSize: 14, lineHeight: 17 }}>
+                        {weather ? `${Math.round(weather.windKmh)} km/h` : '--'}
                       </Text>
                     </View>
                   </View>
@@ -176,9 +204,15 @@ export default function HomeScreen() {
                       <Droplets color="#3e63dd" size={16} strokeWidth={2} />
                     </View>
                     <View>
-                      <Text className="text-[10px] text-[#64748b]">습도</Text>
-                      <Text className="font-semibold text-[#1c2024]" style={{ fontSize: 14 }}>
-                        00%
+                      <Text
+                        className="text-[10px] text-[#64748b]"
+                        style={{ fontFamily: 'Pretendard-Regular', lineHeight: 12 }}>
+                        {s.weather.humidity}
+                      </Text>
+                      <Text
+                        className="font-semibold text-[#1c2024]"
+                        style={{ fontFamily: 'Pretendard-SemiBold', fontSize: 14, lineHeight: 17 }}>
+                        {weather ? `${Math.round(weather.humidity)}%` : '--'}
                       </Text>
                     </View>
                   </View>
@@ -186,10 +220,12 @@ export default function HomeScreen() {
               </LinearGradient>
 
               <View className="border-t border-[rgba(0,0,47,0.06)] bg-[#fafbff] px-4 py-2.5">
-                <Text className="text-xs leading-[18px] text-[#475569]" style={{ letterSpacing: -0.15 }}>
-                  부분적으로 흐린 날씨가 예상됩니다. 최저{' '}
-                  <Text className="font-semibold text-[#1c2024]">21°C</Text> · 최고{' '}
-                  <Text className="font-semibold text-[#1c2024]">33°C</Text>
+                <Text
+                  className="text-xs leading-[18px] text-[#475569]"
+                  style={{ fontFamily: 'Pretendard-Regular', letterSpacing: -0.15 }}>
+                  {weather
+                    ? `${weather.conditionLabel}. ${s.weather.min} ${Math.round(weather.minC)}°C · ${s.weather.max} ${Math.round(weather.maxC)}°C`
+                    : s.weather.loading}
                 </Text>
               </View>
             </View>
@@ -261,11 +297,13 @@ export default function HomeScreen() {
                     <View className="min-w-0 flex-1">
                       <Text
                         className="font-semibold text-[#3e63dd]"
-                        style={{ fontSize: 10, letterSpacing: 0.7 }}>
-                        SUGGESTIONS
+                        style={{ fontFamily: 'Pretendard-SemiBold', fontSize: 10, lineHeight: 12, letterSpacing: 0.7 }}>
+                        {s.suggestions.badge}
                       </Text>
-                      <Text className="font-bold text-[#1c2024]" style={{ fontSize: 16, letterSpacing: -0.35, marginTop: 2 }}>
-                        건의사항
+                      <Text
+                        className="font-bold text-[#1c2024]"
+                        style={{ fontFamily: 'Pretendard-Bold', fontSize: 16, lineHeight: 19, letterSpacing: -0.35, marginTop: 2 }}>
+                        {s.suggestions.title}
                       </Text>
                       <Text
                         style={{
@@ -289,7 +327,7 @@ export default function HomeScreen() {
                           color: '#3e63dd',
                           letterSpacing: -0.2,
                         }}>
-                        더보기
+                        {s.common.seeMore}
                       </Text>
                       <ChevronRight color="#3e63dd" size={18} strokeWidth={2} />
                     </Pressable>
@@ -307,8 +345,14 @@ export default function HomeScreen() {
                       elevation: 1,
                     }}>
                     <View className="min-w-0 flex-1">
-                      <Text className="text-[10px] leading-tight text-[#64748b]">조치 완료</Text>
-                      <Text className="font-semibold text-[#15803d]" style={{ fontSize: 14, marginTop: 2 }}>
+                      <Text
+                        className="text-[10px] leading-tight text-[#64748b]"
+                        style={{ fontFamily: 'Pretendard-Regular', lineHeight: 12 }}>
+                        {s.status.actionCompleted}
+                      </Text>
+                      <Text
+                        className="font-semibold text-[#15803d]"
+                        style={{ fontFamily: 'Pretendard-SemiBold', fontSize: 14, lineHeight: 17, marginTop: 2 }}>
                         {suggestionStats.completed}
                       </Text>
                     </View>
@@ -323,8 +367,14 @@ export default function HomeScreen() {
                       elevation: 1,
                     }}>
                     <View className="min-w-0 flex-1">
-                      <Text className="text-[10px] leading-tight text-[#64748b]">조치중</Text>
-                      <Text className="font-semibold text-[#d97706]" style={{ fontSize: 14, marginTop: 2 }}>
+                      <Text
+                        className="text-[10px] leading-tight text-[#64748b]"
+                        style={{ fontFamily: 'Pretendard-Regular', lineHeight: 12 }}>
+                        {s.status.actionInProgress}
+                      </Text>
+                      <Text
+                        className="font-semibold text-[#d97706]"
+                        style={{ fontFamily: 'Pretendard-SemiBold', fontSize: 14, lineHeight: 17, marginTop: 2 }}>
                         {suggestionStats.inProgress}
                       </Text>
                     </View>
@@ -339,8 +389,14 @@ export default function HomeScreen() {
                       elevation: 1,
                     }}>
                     <View className="min-w-0 flex-1">
-                      <Text className="text-[10px] leading-tight text-[#64748b]">미조치</Text>
-                      <Text className="font-semibold text-[#dc2626]" style={{ fontSize: 14, marginTop: 2 }}>
+                      <Text
+                        className="text-[10px] leading-tight text-[#64748b]"
+                        style={{ fontFamily: 'Pretendard-Regular', lineHeight: 12 }}>
+                        {s.status.pending}
+                      </Text>
+                      <Text
+                        className="font-semibold text-[#dc2626]"
+                        style={{ fontFamily: 'Pretendard-SemiBold', fontSize: 14, lineHeight: 17, marginTop: 2 }}>
                         {suggestionStats.pending}
                       </Text>
                     </View>
@@ -349,8 +405,10 @@ export default function HomeScreen() {
               </LinearGradient>
 
               <View className="border-t border-[rgba(0,0,47,0.06)] bg-[#fafbff] px-4 py-2.5">
-                <Text className="text-xs font-medium text-[#475569]" style={{ letterSpacing: 0.2, marginBottom: 10 }}>
-                  최근 건의
+                <Text
+                  className="text-xs font-medium text-[#475569]"
+                  style={{ fontFamily: 'Pretendard-Medium', letterSpacing: 0.2, marginBottom: 10 }}>
+                  {s.suggestions.recent}
                 </Text>
                 {suggestionPreview.map((item, idx) => {
                   const dotColor =
@@ -386,7 +444,7 @@ export default function HomeScreen() {
                 onPress={() => router.push('/suggestions' as Href)}
                 className="border-t border-slate-100 bg-slate-50/80 px-4 py-3 active:opacity-90">
                 <Text style={{ fontFamily: 'Pretendard-SemiBold', fontSize: 14, color: '#3e63dd', textAlign: 'center' }}>
-                  전체 건의사항 보기
+                  {s.suggestions.viewAll}
                 </Text>
               </Pressable>
             </View>

@@ -1,0 +1,217 @@
+{
+  "common": {
+    "login": "Log in",
+    "logout": "Logout",
+    "logoutConfirmMessage": "Log out?",
+    "logoutConfirmYes": "Log out",
+    "logoutConfirmNo": "No",
+    "goBack": "Go Back",
+    "backToList": "Back to List",
+    "seeMore": "See More",
+    "start": "Start",
+    "contact": "Contact Us",
+    "language": "Language",
+    "korean": "Korean",
+    "english": "English",
+    "default": "Default",
+    "all": "All",
+    "inProgress": "In Progress"
+  },
+
+  "status": {
+    "completed": "Completed",
+    "incomplete": "Incomplete",
+    "scheduled": "Scheduled",
+    "all": "All",
+    "actionCompleted": "Resolved",
+    "actionInProgress": "In Progress",
+    "pending": "Pending"
+  },
+
+  "nav": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "tbm": "Tool Box Meeting",
+    "tbmSubtitle": "Pre-work Safety Meeting",
+    "suggestions": "Suggestions",
+    "suggestionsSubtitle": "Opinions · Requests",
+    "settings": "Settings",
+    "settingsSubtitle": "Account · Notifications",
+    "profile": "My Profile"
+  },
+
+  "login": {
+    "title": "Log in",
+    "subtitle": "Please log in to manage your site safely.",
+    "tabId": "ID Login",
+    "tabOtp": "OTP Login",
+    "labelId": "Username",
+    "labelPassword": "Password",
+    "labelOtp": "OTP Code",
+    "labelPhone": "Phone Number",
+    "labelName": "Name",
+    "placeholderIdLogin": "Enter your username.",
+    "placeholderPassword": "Enter your password.",
+    "placeholderOtp": "Enter your OTP code.",
+    "placeholderPhone": "e.g. 01012345678",
+    "placeholderName": "Enter your name.",
+    "button": "Log in",
+    "contact": "Contact Us",
+    "invalidCredentials": "Invalid username or password.",
+    "otpNotAvailable": "OTP login is not available yet. Please use ID login."
+  },
+
+  "home": {
+    "headerTitle": "Safetics Gangnam Site"
+  },
+
+  "drawer": {
+    "welcomeBadge": "WELCOME",
+    "greeting": "Have a Safe Day",
+    "currentLocation": "Current Location",
+    "menuLabel": "MENU"
+  },
+
+  "weather": {
+    "badge": "WEATHER",
+    "title": "Site Weather",
+    "windSpeed": "Wind",
+    "humidity": "Humidity",
+    "realtime": "Real-time",
+    "feelsLike": "Feels like",
+    "loading": "Loading weather...",
+    "unavailable": "Failed to load weather data.",
+    "min": "Low",
+    "max": "High",
+    "refreshA11y": "Refresh weather"
+  },
+
+  "tbm": {
+    "title": "Tool Box Meeting",
+    "headerTitle": "Tool Box Meeting",
+    "sessionTitle": "Today's TBM",
+    "todayBadge": "TODAY",
+    "startButton": "Start TBM",
+    "startSession": "Start",
+    "notFound": "TBM not found.",
+    "noTodayTitle": "No TBM Scheduled Today",
+    "noTodayDesc": "No TBM sessions are scheduled for today.\nCheck previous records or contact your manager.",
+    "previousRecords": "Previous Records",
+    "noRecordsForStatus": "No TBM records for this status",
+    "checklistProgress": "Checklist Progress",
+    "basicInfo": "Basic Information",
+    "workContent": "Work Content",
+    "riskFactors": "Risk Factors",
+    "safetyMeasures": "Safety Measures",
+    "checklist": "Checklist",
+    "totalSummary": "Total",
+    "workManager": "Work Manager",
+    "tbmManager": "TBM Manager",
+    "supervisingManager": "Supervising Manager",
+    "signatureDemo": "Attendance & Signature (Demo)",
+    "todayCardDesc": "Please complete today's TBM checklist and signature.",
+    "recordDetailTitle": "TBM Record",
+    "recordSiteLabel": "Site",
+    "specialNoticeShort": "Special notice",
+    "signatureSection": "Attendance signature",
+    "signatureMissing": "No signature on file. You may not have attended or completed.",
+    "signatureRecorded": "Recorded"
+  },
+
+  "checklist": {
+    "cautions": "Cautions",
+    "ppe": "Personal Protective Equipment (PPE)",
+    "specialNotice": "Today's Special Notice",
+    "todayNoticeLabel": "Today's Notice",
+    "lastItem": "Last Item",
+    "signLabel": "Signature",
+    "signHere": "Sign Here",
+    "resignLabel": "Sign Again",
+    "managerLabel": "Manager",
+    "attendanceAndSign": "Attendance & Signature",
+    "allConfirmedBanner": "All items confirmed — Please sign to complete the TBM.",
+    "disclaimer": "I confirm that I have reviewed all of the above TBM content and will comply with all safety regulations.",
+    "completeTbm": "Complete TBM",
+    "signBeforeComplete": "Please sign before completing",
+    "confirmAll": "Confirm All Above"
+  },
+
+  "emergency": {
+    "hazard": {
+      "badge": "RISK",
+      "title": "Hazard Report",
+      "desc": "Found an unaddressed hazard?\nNotifies the manager immediately.",
+      "cta": "Tap to Report"
+    },
+    "sos": {
+      "badge": "HELP",
+      "title": "Emergency SOS",
+      "desc": "Sounds the emergency bell\nand connects to control immediately.",
+      "cta": "Tap to Send"
+    },
+    "stop": {
+      "badge": "STOP",
+      "title": "Work Stop Request",
+      "desc": "Immediately notifies the manager\nand stops all field work.",
+      "cta": "Tap to Request"
+    }
+  },
+
+  "suggestions": {
+    "badge": "SUGGESTIONS",
+    "title": "Suggestions",
+    "categoryLabel": "Suggestions · Communication",
+    "recent": "Recent Suggestions",
+    "viewAll": "View All Suggestions",
+    "myPosts": "My Posts",
+    "newPost": "New Suggestion",
+    "noResults": "No suggestions match this filter.",
+    "totalCount": "Total {n}",
+    "detailSuggestionNo": "Suggestion No.",
+    "detailStatus": "Status",
+    "detailGroup": "Group",
+    "detailAuthor": "Author",
+    "detailCreatedAt": "Created At",
+    "detailSuggestion": "Suggestion",
+    "detailActionHistory": "Action History",
+    "detailNoActionHistory": "No action history yet.",
+    "detailComments": "Comments",
+    "detailCommentPlaceholder": "Write a comment",
+    "detailPostComment": "Post Comment",
+    "detailNoComments": "No comments yet.",
+    "detailMe": "Me",
+    "newGroupLabel": "Group",
+    "newTitleLabel": "Title",
+    "newTitlePlaceholder": "Enter suggestion title",
+    "newContentLabel": "Content",
+    "newContentPlaceholder": "Describe the issue and field context in detail",
+    "newSubmit": "Submit",
+    "newSubmitDoneTitle": "Submitted",
+    "newSubmitDoneMessage": "Your suggestion has been submitted.\n(Demo: it is not auto-added to the list yet.)",
+    "confirm": "OK",
+    "groupTbm": "TBM",
+    "groupChecklist": "Checklist",
+    "groupAccess": "Access",
+    "groupAlert": "Alert",
+    "groupUi": "UI",
+    "groupUx": "UX"
+  },
+
+  "profile": {
+    "screenTitle": "My Profile",
+    "siteName": "Site Affiliation",
+    "role": "Role",
+    "notifications": "Notifications",
+    "help": "Help"
+  },
+
+  "settings": {
+    "headerTitle": "Settings",
+    "pushAppTitle": "App push notifications",
+    "pushAppDesc": "Turn app push notifications on or off.\nSound and vibration follow your device settings.",
+    "pushTbmTitle": "TBM registration notifications",
+    "pushTbmDesc": "Get notified when a new Tool Box Meeting you can view is registered.",
+    "backA11y": "Go back",
+    "menuA11y": "Open menu"
+  }
+}
