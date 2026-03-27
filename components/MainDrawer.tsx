@@ -27,11 +27,12 @@ import {
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { scrollViewAndroidProps } from '@/constants/scrollViewAndroid';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDrawer } from '@/contexts/DrawerContext';
 import { useLang } from '@/contexts/LangContext';
+import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 
-const DRAWER_WIDTH = 256;
 const RADIUS = 22;
 
 type MenuKey = 'home' | 'tbm' | 'suggestions' | 'settings';
@@ -52,15 +53,20 @@ export function MainDrawer() {
   const { s, lang, setLang } = useLang();
   const insets = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
+  const { drawerWidth } = useResponsiveLayout();
   const screenHeight = Math.max(Dimensions.get('screen').height, windowHeight);
   const active = useActiveMenu();
   const [langOpen, setLangOpen] = useState(false);
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
-  const slide = useSharedValue(DRAWER_WIDTH);
+  const slide = useSharedValue(drawerWidth);
 
   useEffect(() => {
-    slide.value = withTiming(open ? 0 : DRAWER_WIDTH, { duration: 280 });
-  }, [open, slide]);
+    slide.value = withTiming(open ? 0 : drawerWidth, { duration: 280 });
+  }, [open, drawerWidth, slide]);
+
+  useEffect(() => {
+    if (!open) slide.value = drawerWidth;
+  }, [drawerWidth, open, slide]);
 
   const panelStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: slide.value }],
@@ -80,13 +86,16 @@ export function MainDrawer() {
   }, [closeDrawer]);
 
   const confirmLogout = useCallback(() => {
+    // 1. 모달·드로어 먼저 닫기
     setLogoutConfirmOpen(false);
     closeDrawer();
-    // 모달/드로어가 언마운트된 뒤 세션 해제 — 동시에 트리가 사라지며 RN Modal이 멈추는 것을 완화
-    // TODO(로그아웃): 여전히 흰 화면만 뜨는 등 문제 있음 — AuthContext.logout 및 (main)/_layout Redirect와 함께 정리 예정
+    // 2. 화면 이동을 먼저 → (main) Stack이 언마운트된 뒤 상태 초기화
+    //    순서가 반대면 isLoggedIn이 false가 되는 시점에 Navigator가 아직 살아있어 Render Error 발생
+    router.replace('/');
+    // 3. 애니메이션 전환이 끝난 뒤 auth 상태 초기화 (UI 깜빡임 방지)
     setTimeout(() => {
       logout();
-    }, 300);
+    }, 400);
   }, [closeDrawer, logout]);
 
   const cancelLogout = useCallback(() => {
@@ -109,7 +118,7 @@ export function MainDrawer() {
           style={[
             styles.panel,
             {
-              width: DRAWER_WIDTH,
+              width: drawerWidth,
               height: screenHeight,
               paddingTop: insets.top,
               paddingBottom: insets.bottom,
@@ -232,7 +241,13 @@ export function MainDrawer() {
               </Text>
             </View>
 
-            <ScrollView className="flex-1 px-3" showsVerticalScrollIndicator={false} bounces={false}>
+            <ScrollView
+              {...scrollViewAndroidProps}
+              className="flex-1 px-3"
+              style={{ flex: 1 }}
+              contentContainerClassName="pb-8"
+              showsVerticalScrollIndicator={false}
+              bounces={false}>
               <MenuRow
                 icon={Home}
                 label={s.nav.home}

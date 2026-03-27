@@ -50,12 +50,13 @@
     "labelOtp": "OTP Code",
     "labelPhone": "Phone Number",
     "labelName": "Name",
-    "placeholderIdLogin": "Enter your username.",
+    "placeholderIdLogin": "Enter your email.",
     "placeholderPassword": "Enter your password.",
     "placeholderOtp": "Enter your OTP code.",
     "placeholderPhone": "e.g. 01012345678",
     "placeholderName": "Enter your name.",
     "button": "Log in",
+    "register": "Sign up",
     "contact": "Contact Us",
     "invalidCredentials": "Invalid username or password.",
     "otpNotAvailable": "OTP login is not available yet. Please use ID login."
@@ -133,7 +134,14 @@
     "disclaimer": "I confirm that I have reviewed all of the above TBM content and will comply with all safety regulations.",
     "completeTbm": "Complete TBM",
     "signBeforeComplete": "Please sign before completing",
-    "confirmAll": "Confirm All Above"
+    "confirmAll": "Confirmed",
+    "confirmIssue": "Issue Found",
+    "confirmFlashTitle": "Confirmed",
+    "issueFlashTitle": "Issue Reported",
+    "signatureUploading": "Uploading…",
+    "signatureUploadErrorTitle": "Signature upload failed",
+    "signatureUploadErrorMessage": "We couldn’t upload your signature. Check your connection and try again.",
+    "signatureUploadErrorOk": "OK"
   },
 
   "emergency": {

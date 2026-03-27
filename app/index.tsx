@@ -1,7 +1,11 @@
 import { SafeticsSymbol } from '@/components/SafeticsSymbol';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Redirect, Stack } from 'expo-router';
-import { ChevronRight } from 'lucide-react-native';
+import * as WebBrowser from 'expo-web-browser';
+import type { LucideIcon } from 'lucide-react-native';
+import { Globe, KeyRound, Lock, Phone, ShieldCheck, User, UserCircle } from 'lucide-react-native';
 import { useState } from 'react';
+import type { TextStyle } from 'react-native';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -9,19 +13,74 @@ import {
   ScrollView,
   Text,
   TextInput,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { scrollViewAndroidProps } from '@/constants/scrollViewAndroid';
 import { useAuth } from '@/contexts/AuthContext';
+import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
+import type { SupportedLang } from '@/lang';
 import { useLang } from '@/contexts/LangContext';
 
-/** LGN-01 — Figma node 78:272209 (TBM 화면설계) */
+const LOGIN_URL_CONTACT = 'https://safetics.io/contact';
+const LOGIN_URL_REGISTER = 'https://safetydesigner.safetics.io/account/Register';
+
+/** LGN-01 — 로그인 (아이디 / 인증번호) */
 type LoginTab = 'id' | 'otp';
+
+const footerLinkTextStyle = {
+  fontFamily: 'Pretendard-Medium' as const,
+  fontSize: 14,
+  letterSpacing: -0.3,
+  color: '#64748b',
+};
+
+/** AOS TextInput: 플레이스홀더 세로 잘림 방지 */
+function loginFieldTextStyle(): TextStyle {
+  const base: TextStyle = {
+    fontFamily: 'Pretendard-Regular',
+    fontSize: 16,
+    letterSpacing: -0.35,
+    color: '#0f172a',
+  };
+  if (Platform.OS === 'android') {
+    return {
+      ...base,
+      paddingVertical: 0,
+      textAlignVertical: 'center',
+      includeFontPadding: false,
+    };
+  }
+  return { ...base, lineHeight: 22 };
+}
+
+function FieldShell({ icon: Icon, children }: { icon: LucideIcon; children: React.ReactNode }) {
+  return (
+    <View
+      className="flex-row items-center overflow-hidden rounded-2xl border border-[rgba(0,46,201,0.1)] bg-white px-3.5"
+      style={{
+        minHeight: 52,
+        shadowColor: '#002ec9',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.06,
+        shadowRadius: 12,
+        elevation: 3,
+      }}>
+      <View className="py-3 pr-2">
+        <Icon color="#3e63dd" size={20} strokeWidth={2} />
+      </View>
+      <View className="min-h-[52px] flex-1 justify-center py-2 pr-1">{children}</View>
+    </View>
+  );
+}
 
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
-  const { s } = useLang();
+  const { height: windowHeight } = useWindowDimensions();
+  const { pagePaddingX, loginFormMaxWidth, isTablet, isLargeTablet } = useResponsiveLayout();
+  const { s, lang, setLang } = useLang();
   const { isLoggedIn, login } = useAuth();
   const [tab, setTab] = useState<LoginTab>('id');
   const [userId, setUserId] = useState('');
@@ -30,8 +89,6 @@ export default function LoginScreen() {
   const [phone, setPhone] = useState('');
   const [userName, setUserName] = useState('');
   const [loginError, setLoginError] = useState<string | null>(null);
-
-  const headerMinH = 320;
 
   if (isLoggedIn) {
     return <Redirect href="/(main)" />;
@@ -49,6 +106,11 @@ export default function LoginScreen() {
     }
   };
 
+  const switchTab = (next: LoginTab) => {
+    setTab(next);
+    setLoginError(null);
+  };
+
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
@@ -57,266 +119,419 @@ export default function LoginScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}>
         <ScrollView
+          {...scrollViewAndroidProps}
           className="flex-1 bg-[#fbfdff]"
+          style={{ flex: 1 }}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ flexGrow: 1 }}>
-          {/* Header — accent alpha / hero */}
-          <View
-            className="overflow-hidden px-4 pb-8"
-            style={{
-              backgroundColor: 'rgba(0, 46, 201, 0.88)',
-              paddingTop: insets.top + 38,
-              minHeight: headerMinH + insets.top,
-            }}>
+          contentContainerStyle={{ minHeight: windowHeight }}
+          contentContainerClassName="pb-10">
+          {/* 히어로 */}
+          <View className="overflow-hidden pb-14" style={{ paddingTop: insets.top + 20 }}>
+            <LinearGradient
+              colors={['#0f2a9e', '#1e45d4', '#3e63dd']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{
+                position: 'absolute',
+                left: 0,
+                right: 0,
+                top: 0,
+                bottom: 0,
+              }}
+            />
             <View
-              className="pointer-events-none absolute -left-6 opacity-25"
-              style={{ top: 127, width: 155, height: 158 }}>
-              <View className="h-full w-full rounded-full border-2 border-white/40" />
-              <View className="absolute right-0 top-8 h-24 w-24 rounded-full border border-white/30" />
-            </View>
+              className="pointer-events-none absolute -right-16 -top-10 h-52 w-52 rounded-full"
+              style={{ backgroundColor: 'rgba(255,255,255,0.08)' }}
+            />
+            <View
+              className="pointer-events-none absolute -bottom-8 left-10 h-36 w-10 rounded-full bg-[#60a5fa]/25"
+              style={{ transform: [{ rotate: '12deg' }] }}
+            />
 
-            <View className="max-w-[343px] gap-4">
+            <View style={{ paddingHorizontal: Math.max(20, pagePaddingX) }}>
+              <View className="mb-3 flex-row items-center justify-between gap-3">
+                <View className="flex-row items-center gap-2 self-start rounded-full bg-white/15 px-3 py-1.5">
+                  <ShieldCheck color="#ffffff" size={16} strokeWidth={2.2} />
+                  <Text
+                    style={{
+                      fontFamily: 'Pretendard-SemiBold',
+                      fontSize: 11,
+                      letterSpacing: 1,
+                      color: 'rgba(255,255,255,0.92)',
+                    }}>
+                    SAFETICS
+                  </Text>
+                </View>
+                <View className="flex-row items-center gap-1.5">
+                  <Globe color="rgba(255,255,255,0.85)" size={16} strokeWidth={2} />
+                  <View
+                    className="flex-row rounded-full p-0.5"
+                    style={{ backgroundColor: 'rgba(255,255,255,0.14)' }}
+                    accessibilityRole="radiogroup"
+                    accessibilityLabel={s.common.language}>
+                    {(['ko', 'en'] as const satisfies readonly SupportedLang[]).map((code) => {
+                      const selected = lang === code;
+                      return (
+                        <Pressable
+                          key={code}
+                          onPress={() => setLang(code)}
+                          accessibilityRole="radio"
+                          accessibilityState={{ selected }}
+                          accessibilityLabel={code === 'ko' ? s.common.korean : s.common.english}
+                          hitSlop={6}
+                          className="rounded-full px-2.5 py-1.5"
+                          style={{
+                            backgroundColor: selected ? 'rgba(255,255,255,0.95)' : 'transparent',
+                          }}>
+                          <Text
+                            style={{
+                              fontFamily: selected ? 'Pretendard-SemiBold' : 'Pretendard-Medium',
+                              fontSize: 12,
+                              letterSpacing: -0.2,
+                              color: selected ? '#1e40af' : 'rgba(255,255,255,0.9)',
+                            }}>
+                            {code === 'ko' ? 'KO' : 'EN'}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                </View>
+              </View>
               <Text
-                className="font-bold text-white"
-                style={{ fontSize: 60, lineHeight: 60, letterSpacing: -1.5 }}
-                allowFontScaling={false}>
+                style={{
+                  fontFamily: 'Pretendard-Bold',
+                  fontSize: isLargeTablet ? 38 : isTablet ? 36 : 32,
+                  lineHeight: isLargeTablet ? 46 : isTablet ? 44 : 40,
+                  letterSpacing: -0.9,
+                  color: '#ffffff',
+                }}>
                 {s.login.title}
               </Text>
               <Text
-                className="text-white"
-                style={{ fontSize: 18, lineHeight: 28.8, letterSpacing: -0.45 }}>
+                style={{
+                  fontFamily: 'Pretendard-Regular',
+                  fontSize: isTablet ? 17 : 16,
+                  lineHeight: isTablet ? 26 : 24,
+                  letterSpacing: -0.35,
+                  color: 'rgba(255,255,255,0.88)',
+                  marginTop: 10,
+                  maxWidth: isTablet ? 480 : 320,
+                }}>
                 {s.login.subtitle}
               </Text>
             </View>
           </View>
 
-          {/* Tabs + card — 탭~카드 간 10px (Figma 78:272209), 상단 여백 16px */}
-          <View className="px-4 pt-4">
-            <View className="w-full max-w-[343px] self-center" style={{ gap: 10 }}>
-            <View className="w-full max-w-[343px] flex-row items-start justify-center gap-2.5 self-center">
-              <Pressable
-                onPress={() => {
-                  setTab('id');
-                  setLoginError(null);
-                }}
-                className="relative h-10 flex-1 items-center justify-center px-1"
-                accessibilityRole="tab"
-                accessibilityState={{ selected: tab === 'id' }}>
-                {tab === 'id' ? (
-                  <View className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#3358d4]" />
-                ) : null}
-                <Text
-                  className="text-center text-sm leading-snug"
-                  style={{
-                    fontWeight: tab === 'id' ? '500' : '400',
-                    color: tab === 'id' ? '#1c2024' : 'rgba(0, 7, 20, 0.62)',
-                    letterSpacing: -0.35,
-                  }}>
-                  {s.login.tabId}
-                </Text>
-              </Pressable>
-              <Pressable
-                onPress={() => {
-                  setTab('otp');
-                  setLoginError(null);
-                }}
-                className="relative h-10 flex-1 items-center justify-center px-1"
-                accessibilityRole="tab"
-                accessibilityState={{ selected: tab === 'otp' }}>
-                {tab === 'otp' ? (
-                  <View className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#3358d4]" />
-                ) : null}
-                <Text
-                  className="text-center text-sm leading-snug"
-                  style={{
-                    fontWeight: tab === 'otp' ? '500' : '400',
-                    color: tab === 'otp' ? '#1c2024' : 'rgba(0, 7, 20, 0.62)',
-                    letterSpacing: -0.35,
-                  }}>
-                  {s.login.tabOtp}
-                </Text>
-              </Pressable>
-            </View>
-
+          {/* 오버랩 카드 */}
+          <View style={{ paddingHorizontal: pagePaddingX, marginTop: -48 }}>
             <View
-              className="w-full max-w-[343px] self-center rounded-lg border border-[rgba(0,0,47,0.15)] bg-white p-3"
+              className="overflow-hidden rounded-[22px] border border-[rgba(0,46,201,0.08)] bg-white"
               style={{
-                gap: 16,
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 0 },
-                shadowOpacity: 0.04,
-                shadowRadius: 1,
-                elevation: 1,
+                maxWidth: loginFormMaxWidth,
+                width: '100%',
+                alignSelf: 'center',
+                shadowColor: '#002ec9',
+                shadowOffset: { width: 0, height: 16 },
+                shadowOpacity: 0.12,
+                shadowRadius: 32,
+                elevation: 14,
               }}>
-              {tab === 'id' ? (
-                <>
-                  <View className="gap-2">
+              <LinearGradient
+                colors={['rgba(62,99,221,0.06)', '#ffffff']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 0, y: 1 }}
+                style={{ paddingHorizontal: 20, paddingTop: 22, paddingBottom: 4 }}>
+                {/* 세그먼트 */}
+                <View
+                  className="flex-row rounded-2xl p-1"
+                  style={{ backgroundColor: 'rgba(0, 46, 201, 0.07)' }}>
+                  <Pressable
+                    onPress={() => switchTab('id')}
+                    accessibilityRole="tab"
+                    accessibilityState={{ selected: tab === 'id' }}
+                    className="native:flex-1 overflow-hidden rounded-xl"
+                    style={{
+                      flex: 1,
+                      paddingVertical: 12,
+                      alignItems: 'center',
+                      backgroundColor: tab === 'id' ? '#ffffff' : 'transparent',
+                      ...(tab === 'id'
+                        ? {
+                            shadowColor: '#3e63dd',
+                            shadowOffset: { width: 0, height: 4 },
+                            shadowOpacity: 0.15,
+                            shadowRadius: 8,
+                            elevation: 4,
+                          }
+                        : null),
+                    }}>
                     <Text
-                      className="w-full font-medium text-[#1c2024]"
-                      style={{ fontSize: 16, lineHeight: 25.6, letterSpacing: -0.4 }}>
-                      {s.login.labelId}
+                      style={{
+                        fontFamily: tab === 'id' ? 'Pretendard-SemiBold' : 'Pretendard-Medium',
+                        fontSize: 14,
+                        letterSpacing: -0.3,
+                        color: tab === 'id' ? '#0f172a' : '#64748b',
+                      }}
+                      numberOfLines={1}>
+                      {s.login.tabId}
                     </Text>
-                    <View className="h-10 rounded-md border border-[rgba(0,9,50,0.12)] bg-white/90 px-2">
-                      <TextInput
-                        className="h-full flex-1 px-2 text-base text-[#1c2024]"
-                        style={{ lineHeight: 22, letterSpacing: -0.4 }}
-                        placeholder={s.login.placeholderIdLogin}
-                        placeholderTextColor="rgba(0, 5, 29, 0.45)"
-                        value={userId}
-                        onChangeText={(t) => {
-                          setUserId(t);
-                          setLoginError(null);
-                        }}
-                        autoCapitalize="none"
-                        autoCorrect={false}
-                        textContentType="username"
-                      />
-                    </View>
-                  </View>
-                  <View className="gap-2">
+                  </Pressable>
+                  <Pressable
+                    onPress={() => switchTab('otp')}
+                    accessibilityRole="tab"
+                    accessibilityState={{ selected: tab === 'otp' }}
+                    className="native:flex-1 overflow-hidden rounded-xl"
+                    style={{
+                      flex: 1,
+                      paddingVertical: 12,
+                      alignItems: 'center',
+                      backgroundColor: tab === 'otp' ? '#ffffff' : 'transparent',
+                      ...(tab === 'otp'
+                        ? {
+                            shadowColor: '#3e63dd',
+                            shadowOffset: { width: 0, height: 4 },
+                            shadowOpacity: 0.15,
+                            shadowRadius: 8,
+                            elevation: 4,
+                          }
+                        : null),
+                    }}>
                     <Text
-                      className="w-full font-medium text-[#1c2024]"
-                      style={{ fontSize: 16, lineHeight: 25.6, letterSpacing: -0.4 }}>
-                      {s.login.labelPassword}
+                      style={{
+                        fontFamily: tab === 'otp' ? 'Pretendard-SemiBold' : 'Pretendard-Medium',
+                        fontSize: 14,
+                        letterSpacing: -0.3,
+                        color: tab === 'otp' ? '#0f172a' : '#64748b',
+                      }}
+                      numberOfLines={1}>
+                      {s.login.tabOtp}
                     </Text>
-                    <View className="h-10 rounded-md border border-[rgba(0,9,50,0.12)] bg-white/90 px-2">
-                      <TextInput
-                        className="h-full flex-1 px-2 text-base text-[#1c2024]"
-                        style={{ lineHeight: 22, letterSpacing: -0.4 }}
-                        placeholder={s.login.placeholderPassword}
-                        placeholderTextColor="rgba(0, 5, 29, 0.45)"
-                        value={password}
-                        onChangeText={(t) => {
-                          setPassword(t);
-                          setLoginError(null);
-                        }}
-                        secureTextEntry
-                        textContentType="password"
-                        autoCapitalize="none"
-                      />
-                    </View>
-                  </View>
-                </>
-              ) : (
-                <>
-                  <View className="gap-2">
-                    <Text
-                      className="w-full font-medium text-[#1c2024]"
-                      style={{ fontSize: 16, lineHeight: 25.6, letterSpacing: -0.4 }}>
-                      {s.login.labelOtp}
-                    </Text>
-                    <View className="h-10 rounded-md border border-[rgba(0,9,50,0.12)] bg-white/90 px-2">
-                      <TextInput
-                        className="h-full flex-1 px-2 text-base text-[#1c2024]"
-                        style={{ lineHeight: 22, letterSpacing: -0.4 }}
-                        placeholder={s.login.placeholderOtp}
-                        placeholderTextColor="rgba(0, 5, 29, 0.45)"
-                        value={otpCode}
-                        onChangeText={setOtpCode}
-                        keyboardType="number-pad"
-                        textContentType="oneTimeCode"
-                      />
-                    </View>
-                  </View>
-                  <View className="gap-2">
-                    <Text
-                      className="w-full font-medium text-[#1c2024]"
-                      style={{ fontSize: 16, lineHeight: 25.6, letterSpacing: -0.4 }}>
-                      {s.login.labelPhone}
-                    </Text>
-                    <View className="h-10 rounded-md border border-[rgba(0,9,50,0.12)] bg-white/90 px-2">
-                      <TextInput
-                        className="h-full flex-1 px-2 text-base text-[#1c2024]"
-                        style={{ lineHeight: 22, letterSpacing: -0.4 }}
-                        placeholder={s.login.placeholderPhone}
-                        placeholderTextColor="rgba(0, 5, 29, 0.45)"
-                        value={phone}
-                        onChangeText={setPhone}
-                        keyboardType="phone-pad"
-                        textContentType="telephoneNumber"
-                      />
-                    </View>
-                  </View>
-                  <View className="gap-2">
-                    <Text
-                      className="w-full font-medium text-[#1c2024]"
-                      style={{ fontSize: 16, lineHeight: 25.6, letterSpacing: -0.4 }}>
-                      {s.login.labelName}
-                    </Text>
-                    <View className="h-10 rounded-md border border-[rgba(0,9,50,0.12)] bg-white/90 px-2">
-                      <TextInput
-                        className="h-full flex-1 px-2 text-base text-[#1c2024]"
-                        style={{ lineHeight: 22, letterSpacing: -0.4 }}
-                        placeholder={s.login.placeholderName}
-                        placeholderTextColor="rgba(0, 5, 29, 0.45)"
-                        value={userName}
-                        onChangeText={setUserName}
-                        textContentType="name"
-                      />
-                    </View>
-                  </View>
-                </>
-              )}
+                  </Pressable>
+                </View>
+              </LinearGradient>
 
-              {loginError ? (
-                <Text
+              <View className="gap-3 px-5 pb-2 pt-1">
+                {tab === 'id' ? (
+                  <>
+                    <View className="gap-1.5">
+                      <Text
+                        style={{
+                          fontFamily: 'Pretendard-Medium',
+                          fontSize: 13,
+                          letterSpacing: -0.2,
+                          color: '#64748b',
+                        }}>
+                        {s.login.labelId}
+                      </Text>
+                      <FieldShell icon={User}>
+                        <TextInput
+                          placeholder={s.login.placeholderIdLogin}
+                          placeholderTextColor="rgba(15, 23, 42, 0.38)"
+                          value={userId}
+                          onChangeText={(t) => {
+                            setUserId(t);
+                            setLoginError(null);
+                          }}
+                          autoCapitalize="none"
+                          autoCorrect={false}
+                          textContentType="username"
+                          className="w-full text-[#0f172a]"
+                          style={loginFieldTextStyle()}
+                        />
+                      </FieldShell>
+                    </View>
+                    <View className="gap-1.5">
+                      <Text
+                        style={{
+                          fontFamily: 'Pretendard-Medium',
+                          fontSize: 13,
+                          letterSpacing: -0.2,
+                          color: '#64748b',
+                        }}>
+                        {s.login.labelPassword}
+                      </Text>
+                      <FieldShell icon={Lock}>
+                        <TextInput
+                          placeholder={s.login.placeholderPassword}
+                          placeholderTextColor="rgba(15, 23, 42, 0.38)"
+                          value={password}
+                          onChangeText={(t) => {
+                            setPassword(t);
+                            setLoginError(null);
+                          }}
+                          secureTextEntry
+                          textContentType="password"
+                          autoCapitalize="none"
+                          className="w-full text-[#0f172a]"
+                          style={loginFieldTextStyle()}
+                        />
+                      </FieldShell>
+                    </View>
+                  </>
+                ) : (
+                  <>
+                    <View className="gap-1.5">
+                      <Text
+                        style={{
+                          fontFamily: 'Pretendard-Medium',
+                          fontSize: 13,
+                          letterSpacing: -0.2,
+                          color: '#64748b',
+                        }}>
+                        {s.login.labelOtp}
+                      </Text>
+                      <FieldShell icon={KeyRound}>
+                        <TextInput
+                          placeholder={s.login.placeholderOtp}
+                          placeholderTextColor="rgba(15, 23, 42, 0.38)"
+                          value={otpCode}
+                          onChangeText={setOtpCode}
+                          keyboardType="number-pad"
+                          textContentType="oneTimeCode"
+                          className="w-full text-[#0f172a]"
+                          style={loginFieldTextStyle()}
+                        />
+                      </FieldShell>
+                    </View>
+                    <View className="gap-1.5">
+                      <Text
+                        style={{
+                          fontFamily: 'Pretendard-Medium',
+                          fontSize: 13,
+                          letterSpacing: -0.2,
+                          color: '#64748b',
+                        }}>
+                        {s.login.labelPhone}
+                      </Text>
+                      <FieldShell icon={Phone}>
+                        <TextInput
+                          placeholder={s.login.placeholderPhone}
+                          placeholderTextColor="rgba(15, 23, 42, 0.38)"
+                          value={phone}
+                          onChangeText={setPhone}
+                          keyboardType="phone-pad"
+                          textContentType="telephoneNumber"
+                          className="w-full text-[#0f172a]"
+                          style={loginFieldTextStyle()}
+                        />
+                      </FieldShell>
+                    </View>
+                    <View className="gap-1.5">
+                      <Text
+                        style={{
+                          fontFamily: 'Pretendard-Medium',
+                          fontSize: 13,
+                          letterSpacing: -0.2,
+                          color: '#64748b',
+                        }}>
+                        {s.login.labelName}
+                      </Text>
+                      <FieldShell icon={UserCircle}>
+                        <TextInput
+                          placeholder={s.login.placeholderName}
+                          placeholderTextColor="rgba(15, 23, 42, 0.38)"
+                          value={userName}
+                          onChangeText={setUserName}
+                          textContentType="name"
+                          className="w-full text-[#0f172a]"
+                          style={loginFieldTextStyle()}
+                        />
+                      </FieldShell>
+                    </View>
+                  </>
+                )}
+
+                {loginError ? (
+                  <View className="mt-1 rounded-xl bg-red-50 px-3 py-2.5">
+                    <Text
+                      style={{
+                        fontFamily: 'Pretendard-Medium',
+                        fontSize: 13,
+                        lineHeight: 18,
+                        letterSpacing: -0.25,
+                        color: '#b91c1c',
+                        textAlign: 'center',
+                      }}>
+                      {loginError}
+                    </Text>
+                  </View>
+                ) : null}
+
+                <Pressable
+                  onPress={handleLogin}
+                  accessibilityRole="button"
+                  accessibilityLabel={s.login.button}
+                  className="mt-2 overflow-hidden rounded-2xl active:opacity-92"
                   style={{
-                    fontFamily: 'Pretendard-Regular',
-                    fontSize: 13,
-                    lineHeight: 18,
-                    letterSpacing: -0.25,
-                    color: '#dc2626',
-                    textAlign: 'center',
+                    shadowColor: '#3e63dd',
+                    shadowOffset: { width: 0, height: 8 },
+                    shadowOpacity: 0.35,
+                    shadowRadius: 16,
+                    elevation: 8,
                   }}>
-                  {loginError}
-                </Text>
-              ) : null}
+                  <LinearGradient
+                    colors={['#4f6ef2', '#3e63dd', '#2f4fc9']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={{ paddingVertical: 16, alignItems: 'center', justifyContent: 'center' }}>
+                    <Text
+                      style={{
+                        fontFamily: 'Pretendard-SemiBold',
+                        fontSize: 17,
+                        letterSpacing: -0.4,
+                        color: '#ffffff',
+                      }}>
+                      {s.login.button}
+                    </Text>
+                  </LinearGradient>
+                </Pressable>
 
-              <Pressable
-                onPress={handleLogin}
-                className="h-12 w-full flex-row items-center justify-center gap-3 rounded-lg bg-[#3e63dd] px-6 active:opacity-90"
-                accessibilityRole="button"
-                accessibilityLabel={s.login.button}>
-                <Text
-                  className="font-medium text-white"
-                  style={{ fontSize: 18, lineHeight: 28.8, letterSpacing: -0.45 }}>
-                  {s.login.button}
-                </Text>
-                <ChevronRight color="#ffffff" size={20} strokeWidth={2} />
-              </Pressable>
-
-              <Pressable className="items-center py-0.5" hitSlop={8}>
-                <Text
-                  className="text-center font-medium"
-                  style={{
-                    fontSize: 14,
-                    lineHeight: 22.4,
-                    letterSpacing: -0.35,
-                    color: 'rgba(0, 7, 20, 0.62)',
-                  }}>
-                  {s.login.contact}
-                </Text>
-              </Pressable>
-            </View>
+                <View className="flex-row flex-wrap items-center justify-center gap-x-2 py-2 pb-5">
+                  {tab === 'id' ? (
+                    <>
+                      <Pressable
+                        onPress={() => void WebBrowser.openBrowserAsync(LOGIN_URL_REGISTER)}
+                        hitSlop={8}
+                        accessibilityRole="link"
+                        accessibilityLabel={s.login.register}>
+                        <Text style={footerLinkTextStyle}>{s.login.register}</Text>
+                      </Pressable>
+                      <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 13, color: '#cbd5e1' }}>·</Text>
+                    </>
+                  ) : null}
+                  <Pressable
+                    onPress={() => void WebBrowser.openBrowserAsync(LOGIN_URL_CONTACT)}
+                    hitSlop={8}
+                    accessibilityRole="link"
+                    accessibilityLabel={s.login.contact}>
+                    <Text style={footerLinkTextStyle}>{s.login.contact}</Text>
+                  </Pressable>
+                </View>
+              </View>
             </View>
           </View>
 
-          <View className="min-h-[24px] flex-1" />
+          <View className="min-h-[16px] flex-1" />
 
-          {/* Footer — 심볼 + 워드마크 (피그마 LGN-01 푸터 대응) */}
           <View
-            className="items-center gap-2 px-4 pb-8 pt-8"
-            style={{ paddingBottom: Math.max(insets.bottom, 24) + 10 }}>
-            <SafeticsSymbol size={44} color="#096DD9" />
+            className="items-center gap-2 pb-6"
+            style={{ paddingHorizontal: pagePaddingX, paddingBottom: Math.max(insets.bottom, 20) + 8 }}>
+            <SafeticsSymbol size={40} color="#096DD9" />
             <Text
-              className="font-bold tracking-tight text-[#64748b]"
-              style={{ fontSize: 22, letterSpacing: -0.5 }}>
+              className="font-bold tracking-tight text-[#94a3b8]"
+              style={{ fontFamily: 'Pretendard-Bold', fontSize: 20, letterSpacing: -0.4 }}>
               safetics
             </Text>
             <Text
-              className="font-bold text-[#1c2024]"
-              style={{ fontSize: 18, lineHeight: 28.8, letterSpacing: -0.45, opacity: 0.2 }}>
+              style={{
+                fontFamily: 'Pretendard-Medium',
+                fontSize: 12,
+                letterSpacing: 0.2,
+                color: '#94a3b8',
+                textTransform: 'uppercase',
+              }}>
               Tool Box Meeting
             </Text>
           </View>

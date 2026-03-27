@@ -2,33 +2,23 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Href, Link, useRouter } from 'expo-router';
 import {
   ArrowLeft,
-  CheckCircle2,
   ChevronRight,
   ClipboardList,
   Menu,
   Users,
-  XCircle,
 } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { CenteredColumn } from '@/components/CenteredColumn';
+import { scrollViewAndroidProps } from '@/constants/scrollViewAndroid';
 import { useDrawer } from '@/contexts/DrawerContext';
 import { useLang } from '@/contexts/LangContext';
-import { MOCK_TBMS, TbmItem, TbmStatus } from '@/constants/tbm';
+import { isTbmScheduledToday, MOCK_TBMS, TbmItem, TbmStatus } from '@/constants/tbm';
+import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 
 /** TBM-01 */
-
-const today = new Date();
-
-function isToday(iso: string) {
-  const d = new Date(iso);
-  return (
-    d.getFullYear() === today.getFullYear() &&
-    d.getMonth() === today.getMonth() &&
-    d.getDate() === today.getDate()
-  );
-}
 
 function getDayLabel(iso: string) {
   const d = new Date(iso);
@@ -62,9 +52,6 @@ type FilterTab = 'all' | TbmStatus;
 
 function TodayHeroCard({ item }: { item: TbmItem }) {
   const { s } = useLang();
-  const done = item.checklist.filter((c) => c.done).length;
-  const total = item.checklist.length;
-  const pct = total > 0 ? done / total : 0;
   const pendingItems =
     item.checklist.filter((c) => !c.done).length + item.riskFactors.length + item.safetyMeasures.length;
 
@@ -120,25 +107,7 @@ function TodayHeroCard({ item }: { item: TbmItem }) {
             </View>
           </View>
 
-          {/* 체크리스트 진행률 */}
-          <View style={{ gap: 8 }}>
-            <View className="flex-row items-center justify-between">
-              <Text style={{ fontFamily: 'Pretendard-Medium', fontSize: 12, lineHeight: 14, color: 'rgba(255,255,255,0.7)', letterSpacing: -0.2 }}>
-                {s.tbm.checklistProgress}
-              </Text>
-              <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 13, lineHeight: 16, color: '#ffffff' }}>
-                {done}/{total}
-              </Text>
-            </View>
-            <View className="h-2 overflow-hidden rounded-full" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
-              <View
-                className="h-full rounded-full"
-                style={{ width: `${pct * 100}%`, backgroundColor: pct >= 1 ? '#4ade80' : '#ffffff' }}
-              />
-            </View>
-          </View>
-
-          {/* CTA 버튼 */}
+          {/* CTA 버튼 (기존 — 주석 보존)
           <View
             className="flex-row items-center justify-between rounded-2xl px-5"
             style={{ backgroundColor: 'rgba(255,255,255,0.15)', paddingVertical: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' }}>
@@ -154,6 +123,120 @@ function TodayHeroCard({ item }: { item: TbmItem }) {
               className="h-10 w-10 items-center justify-center rounded-full"
               style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
               <ChevronRight color="#ffffff" size={20} strokeWidth={2.5} />
+            </View>
+          </View>
+          */}
+
+          {/* CTA 버튼 (신규 v1 — 주석 보존)
+          <View style={{ gap: 8 }}>
+            <View className="flex-row items-center" style={{ gap: 5 }}>
+              <View style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.45)' }} />
+              <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 12, lineHeight: 15, color: 'rgba(255,255,255,0.55)', letterSpacing: -0.1 }}>
+                확인할 사항 {pendingItems}개 남음
+              </Text>
+            </View>
+            <View style={{ borderRadius: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 10, elevation: 6 }}>
+              <View className="flex-row items-center justify-between rounded-2xl px-5" style={{ backgroundColor: '#ffffff', paddingVertical: 16 }}>
+                <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 17, lineHeight: 20, color: '#1e3a8a', letterSpacing: -0.4 }}>
+                  {s.tbm.startButton}
+                </Text>
+                <View className="h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: '#3e63dd' }}>
+                  <ChevronRight color="#ffffff" size={18} strokeWidth={2.8} />
+                </View>
+              </View>
+            </View>
+          </View>
+          */}
+
+          {/* CTA 버튼 (신규 v2 — 주석 보존)
+          <View style={{ gap: 10 }}>
+            <View className="flex-row items-center justify-center" style={{ gap: 5 }}>
+              <View style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.4)' }} />
+              <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 13, lineHeight: 16, color: 'rgba(255,255,255,0.55)', letterSpacing: -0.1 }}>
+                확인할 사항 {pendingItems}개 남음
+              </Text>
+              <View style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.4)' }} />
+            </View>
+            <View style={{ borderRadius: 18, shadowColor: '#d97706', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.55, shadowRadius: 14, elevation: 10 }}>
+              <LinearGradient colors={['#fde68a', '#fbbf24', '#f59e0b']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                style={{ borderRadius: 18, paddingVertical: 18, paddingHorizontal: 22, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderWidth: 1, borderColor: 'rgba(255,255,255,0.4)' }}>
+                <View style={{ gap: 3 }}>
+                  <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 19, lineHeight: 23, color: '#78350f', letterSpacing: -0.5 }}>{s.tbm.startButton}</Text>
+                  <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 12, lineHeight: 15, color: 'rgba(120,53,15,0.65)', letterSpacing: -0.1 }}>지금 바로 시작하세요</Text>
+                </View>
+                <View style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: 'rgba(120,53,15,0.15)', alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: 'rgba(120,53,15,0.20)' }}>
+                  <ChevronRight color="#92400e" size={22} strokeWidth={2.8} />
+                </View>
+              </LinearGradient>
+            </View>
+          </View>
+          */}
+
+          {/* CTA 버튼 (신규 v3) */}
+          <View style={{ gap: 10 }}>
+            {/* 남은 항목 수 */}
+            <View className="flex-row items-center justify-center" style={{ gap: 6 }}>
+              <View style={{ flex: 1, height: 1, backgroundColor: 'rgba(255,255,255,0.18)' }} />
+              <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 12, lineHeight: 15, color: 'rgba(255,255,255,0.45)', letterSpacing: 0.2 }}>
+                확인할 사항 {pendingItems}개
+              </Text>
+              <View style={{ flex: 1, height: 1, backgroundColor: 'rgba(255,255,255,0.18)' }} />
+            </View>
+
+            {/* 흰색 글로우 버튼 */}
+            <View
+              style={{
+                borderRadius: 20,
+                shadowColor: '#ffffff',
+                shadowOffset: { width: 0, height: 0 },
+                shadowOpacity: 0.35,
+                shadowRadius: 20,
+                elevation: 12,
+              }}>
+              <LinearGradient
+                colors={['#ffffff', '#e8eeff']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{
+                  borderRadius: 20,
+                  paddingVertical: 20,
+                  paddingHorizontal: 24,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}>
+                <View style={{ gap: 4 }}>
+                  <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 20, lineHeight: 24, color: '#1e3a8a', letterSpacing: -0.6 }}>
+                    {s.tbm.startButton}
+                  </Text>
+                  <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 12, lineHeight: 15, color: 'rgba(30,58,138,0.50)', letterSpacing: -0.1 }}>
+                    지금 바로 시작하세요
+                  </Text>
+                </View>
+                <View
+                  style={{
+                    width: 44, height: 44,
+                    borderRadius: 22,
+                    shadowColor: '#3e63dd',
+                    shadowOffset: { width: 0, height: 0 },
+                    shadowOpacity: 1,
+                    shadowRadius: 80,
+                    elevation: 30,
+                  }}>
+                  <LinearGradient
+                    colors={['#3e63dd', '#1e40af']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 0, y: 1 }}
+                    style={{
+                      width: 44, height: 44,
+                      borderRadius: 22,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}>
+                    <ChevronRight color="#ffffff" size={22} strokeWidth={2.8} />
+                  </LinearGradient>
+                </View>
+              </LinearGradient>
             </View>
           </View>
         </LinearGradient>
@@ -201,73 +284,87 @@ function NoTodayCard() {
   );
 }
 
-// ─── Stats Row ───────────────────────────────────────────────────────────────
+// ─── Filter Tabs (건수 뱃지 통합, StatsRow 대체) ─────────────────────────────
 
-function StatsRow({ items }: { items: TbmItem[] }) {
-  const { s } = useLang();
-  const total = items.length;
-  const completed = items.filter((t) => t.status === 'completed').length;
-  const incomplete = items.filter((t) => t.status === 'incomplete').length;
-  const scheduled = items.filter((t) => t.status === 'scheduled').length;
+const TAB_ACCENT: Record<FilterTab, { activeText: string; countBg: string; countText: string }> = {
+  all:        { activeText: '#1d4ed8', countBg: 'rgba(62,99,221,0.12)',  countText: '#3e63dd' },
+  completed:  { activeText: '#15803d', countBg: 'rgba(34,197,94,0.14)',  countText: '#15803d' },
+  incomplete: { activeText: '#b91c1c', countBg: 'rgba(229,72,77,0.13)',  countText: '#dc2626' },
+  scheduled:  { activeText: '#1d4ed8', countBg: 'rgba(62,99,221,0.12)',  countText: '#3e63dd' },
+};
 
-  const chips = [
-    { label: s.status.all, value: total, color: '#3e63dd', bg: 'rgba(62,99,221,0.08)' },
-    { label: s.status.completed, value: completed, color: '#15803d', bg: 'rgba(34,197,94,0.08)' },
-    { label: s.status.incomplete, value: incomplete, color: '#b91c1c', bg: 'rgba(229,72,77,0.08)' },
-    { label: s.status.scheduled, value: scheduled, color: '#1d4ed8', bg: 'rgba(62,99,221,0.08)' },
-  ];
-
-  return (
-    <View className="flex-row gap-2">
-      {chips.map(({ label, value, color, bg }) => (
-        <View
-          key={label}
-          className="flex-1 items-center justify-center rounded-2xl py-3"
-          style={{ backgroundColor: bg }}>
-          <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 18, lineHeight: 22, color, letterSpacing: -0.4 }}>
-            {value}
-          </Text>
-          <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 11, lineHeight: 13, color: 'rgba(0,7,20,0.5)', marginTop: 2, letterSpacing: -0.1 }}>
-            {label}
-          </Text>
-        </View>
-      ))}
-    </View>
-  );
-}
-
-// ─── Filter Tabs ─────────────────────────────────────────────────────────────
-
-function FilterTabs({ active, onChange }: { active: FilterTab; onChange: (k: FilterTab) => void }) {
+function FilterTabs({
+  active,
+  onChange,
+  counts,
+}: {
+  active: FilterTab;
+  onChange: (k: FilterTab) => void;
+  counts: Record<FilterTab, number>;
+}) {
   const { s } = useLang();
   const TABS: { key: FilterTab; label: string }[] = [
-    { key: 'all', label: s.status.all },
-    { key: 'completed', label: s.status.completed },
+    { key: 'all',        label: s.status.all },
+    { key: 'completed',  label: s.status.completed },
     { key: 'incomplete', label: s.status.incomplete },
-    { key: 'scheduled', label: s.status.scheduled },
+    { key: 'scheduled',  label: s.status.scheduled },
   ];
+
   return (
-    <View className="flex-row rounded-xl p-1" style={{ backgroundColor: 'rgba(0,0,47,0.06)' }}>
-      {TABS.map(({ key, label }) => (
-        <Pressable
-          key={key}
-          onPress={() => onChange(key)}
-          className="flex-1 items-center rounded-lg py-2"
-          style={{ backgroundColor: active === key ? '#ffffff' : 'transparent' }}
-          accessibilityRole="tab"
-          accessibilityState={{ selected: active === key }}>
-          <Text
+    <View
+      className="flex-row rounded-2xl p-1"
+      style={{ backgroundColor: 'rgba(0,0,47,0.05)', borderWidth: 1, borderColor: 'rgba(0,0,47,0.06)' }}>
+      {TABS.map(({ key, label }) => {
+        const isActive = active === key;
+        const accent = TAB_ACCENT[key];
+        return (
+          <Pressable
+            key={key}
+            onPress={() => onChange(key)}
+            className="flex-1 items-center rounded-xl py-2.5 active:opacity-80"
             style={{
-              fontFamily: active === key ? 'Pretendard-SemiBold' : 'Pretendard-Regular',
-              fontSize: 13,
-              lineHeight: 16,
-              letterSpacing: -0.2,
-              color: active === key ? '#1c2024' : 'rgba(0,7,20,0.5)',
-            }}>
-            {label}
-          </Text>
-        </Pressable>
-      ))}
+              backgroundColor: isActive ? '#ffffff' : 'transparent',
+              ...(isActive
+                ? {
+                    shadowColor: '#002ec9',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.08,
+                    shadowRadius: 6,
+                    elevation: 2,
+                  }
+                : null),
+            }}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: isActive }}>
+            {/* 건수 뱃지 */}
+            <View
+              className="mb-1 items-center justify-center rounded-full px-2 py-0.5"
+              style={{ backgroundColor: isActive ? accent.countBg : 'transparent', minWidth: 28 }}>
+              <Text
+                style={{
+                  fontFamily: 'Pretendard-Bold',
+                  fontSize: 16,
+                  lineHeight: 20,
+                  letterSpacing: -0.4,
+                  color: isActive ? accent.countText : 'rgba(0,7,20,0.35)',
+                }}>
+                {counts[key]}
+              </Text>
+            </View>
+            {/* 탭 레이블 */}
+            <Text
+              style={{
+                fontFamily: isActive ? 'Pretendard-SemiBold' : 'Pretendard-Regular',
+                fontSize: 11,
+                lineHeight: 14,
+                letterSpacing: -0.1,
+                color: isActive ? accent.activeText : 'rgba(0,7,20,0.4)',
+              }}>
+              {label}
+            </Text>
+          </Pressable>
+        );
+      })}
     </View>
   );
 }
@@ -276,9 +373,6 @@ function FilterTabs({ active, onChange }: { active: FilterTab; onChange: (k: Fil
 
 function PastTbmCard({ item }: { item: TbmItem }) {
   const STATUS_LABEL = useStatusLabel();
-  const done = item.checklist.filter((c) => c.done).length;
-  const total = item.checklist.length;
-  const pct = total > 0 ? done / total : 0;
   const sc = STATUS_COLORS[item.status];
 
   return (
@@ -294,9 +388,32 @@ function PastTbmCard({ item }: { item: TbmItem }) {
           elevation: 2,
         }}
         accessibilityRole="button">
-        <View className="p-4" style={{ gap: 10 }}>
-          {/* 상단 행: 날짜 + 상태 뱃지 */}
-          <View className="flex-row items-center justify-between">
+        {/* 우측 상단 상태 뱃지 — 절대 위치 */}
+        <View
+          style={{
+            position: 'absolute',
+            top: 12,
+            right: 12,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 6,
+            borderRadius: 999,
+            paddingHorizontal: 10,
+            paddingVertical: 4,
+            backgroundColor: sc.bg,
+            zIndex: 1,
+          }}>
+          <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: sc.dot }} />
+          <Text style={{ fontFamily: 'Pretendard-SemiBold', fontSize: 12, lineHeight: 14, color: sc.text, letterSpacing: -0.2 }}>
+            {STATUS_LABEL[item.status]}
+          </Text>
+        </View>
+
+        {/* 콘텐츠 좌측 + 화살표 우측 수직 중앙 */}
+        <View className="flex-row items-center p-4" style={{ gap: 12 }}>
+          {/* 좌측: 텍스트 영역 */}
+          <View style={{ flex: 1, gap: 6 }}>
+            {/* 날짜 */}
             <View className="flex-row items-center gap-2">
               <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 15, lineHeight: 18, color: '#1c2024', letterSpacing: -0.3 }}>
                 {getDayLabel(item.scheduledAt)}
@@ -305,26 +422,16 @@ function PastTbmCard({ item }: { item: TbmItem }) {
                 {getHHMM(item.scheduledAt)}
               </Text>
             </View>
-            <View
-              className="flex-row items-center gap-1.5 rounded-full px-2.5 py-1"
-              style={{ backgroundColor: sc.bg }}>
-              <View className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: sc.dot }} />
-              <Text style={{ fontFamily: 'Pretendard-SemiBold', fontSize: 12, lineHeight: 14, color: sc.text, letterSpacing: -0.2 }}>
-                {STATUS_LABEL[item.status]}
-              </Text>
-            </View>
-          </View>
 
-          {/* 제목 */}
-          <Text
-            style={{ fontFamily: 'Pretendard-Bold', fontSize: 17, letterSpacing: -0.4, color: '#1c2024', lineHeight: 24 }}
-            numberOfLines={1}>
-            {item.title}
-          </Text>
+            {/* 제목 */}
+            <Text
+              style={{ fontFamily: 'Pretendard-Bold', fontSize: 17, letterSpacing: -0.4, color: '#1c2024', lineHeight: 24 }}
+              numberOfLines={1}>
+              {item.title}
+            </Text>
 
-          {/* 메타 정보 행 */}
-          <View className="flex-row items-center gap-3">
-            <View className="flex-1 flex-row items-center gap-1">
+            {/* 메타 */}
+            <View className="flex-row items-center gap-1">
               <Users color="#94a3b8" size={12} strokeWidth={2} />
               <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 12, lineHeight: 14, color: '#64748b', letterSpacing: -0.15 }}>
                 책임자 {item.supervisor} · 참석 {item.attendeeCount}명
@@ -332,28 +439,8 @@ function PastTbmCard({ item }: { item: TbmItem }) {
             </View>
           </View>
 
-          {/* 하단 행: 체크리스트 진행률 + 화살표 */}
-          <View className="flex-row items-center gap-3">
-            <View className="flex-1 flex-row items-center gap-2">
-              <View className="h-1.5 flex-1 overflow-hidden rounded-full" style={{ backgroundColor: 'rgba(0,0,47,0.07)' }}>
-                <View
-                  className="h-full rounded-full"
-                  style={{ width: `${pct * 100}%`, backgroundColor: pct >= 1 ? '#22c55e' : '#3e63dd' }}
-                />
-              </View>
-              <Text style={{ fontFamily: 'Pretendard-SemiBold', fontSize: 12, lineHeight: 14, color: pct >= 1 ? '#15803d' : '#3e63dd', letterSpacing: -0.2 }}>
-                {done}/{total}
-              </Text>
-            </View>
-            <View className="flex-row items-center gap-1">
-              {item.status === 'completed' ? (
-                <CheckCircle2 color="#22c55e" size={16} strokeWidth={2} />
-              ) : item.status === 'incomplete' ? (
-                <XCircle color="#e5484d" size={16} strokeWidth={2} />
-              ) : null}
-              <ChevronRight color="#cbd5e1" size={18} strokeWidth={2} />
-            </View>
-          </View>
+          {/* 우측: 화살표 수직 중앙 */}
+          <ChevronRight color="#cbd5e1" size={20} strokeWidth={2} />
         </View>
       </Pressable>
     </Link>
@@ -367,20 +454,31 @@ export default function TbmListScreen() {
   const router = useRouter();
   const { openDrawer } = useDrawer();
   const { s } = useLang();
+  const { pagePaddingX, contentColumnMaxWidth, headerTitleFontSize } = useResponsiveLayout();
   const [filter, setFilter] = useState<FilterTab>('all');
 
   const headerBlockH = 40 + 8;
   const scrollPadTop = insets.top + headerBlockH + 24;
 
-  const todayTbm = useMemo(() => MOCK_TBMS.find((t) => isToday(t.scheduledAt)), []);
+  const todayTbm = useMemo(() => MOCK_TBMS.find((t) => isTbmScheduledToday(t.scheduledAt)), []);
   const pastTbms = useMemo(
     () =>
       MOCK_TBMS.filter(
-        (t) => !isToday(t.scheduledAt) || t.appearsInHistoryList === true,
+        (t) => !isTbmScheduledToday(t.scheduledAt) || t.appearsInHistoryList === true,
       ).sort(
         (a, b) => new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime(),
       ),
     [],
+  );
+
+  const tabCounts = useMemo<Record<FilterTab, number>>(
+    () => ({
+      all:        pastTbms.length,
+      completed:  pastTbms.filter((t) => t.status === 'completed').length,
+      incomplete: pastTbms.filter((t) => t.status === 'incomplete').length,
+      scheduled:  pastTbms.filter((t) => t.status === 'scheduled').length,
+    }),
+    [pastTbms],
   );
 
   const filteredPast = useMemo(
@@ -392,8 +490,9 @@ export default function TbmListScreen() {
     <View className="flex-1 bg-[#fbfdff]">
       {/* ── Sticky Header ── */}
       <View
-        className="absolute left-0 right-0 top-0 z-10 px-4"
+        className="absolute left-0 right-0 top-0 z-10"
         style={{
+          paddingHorizontal: pagePaddingX,
           paddingTop: insets.top + 14,
           paddingBottom: 8,
           backgroundColor: 'rgba(0, 46, 201, 0.88)',
@@ -407,7 +506,13 @@ export default function TbmListScreen() {
           </Pressable>
           <View className="flex-1 items-center justify-center">
             <Text
-              style={{ fontFamily: 'Pretendard-Bold', fontSize: 20, lineHeight: 24, letterSpacing: -0.5, color: '#ffffff' }}>
+              style={{
+                fontFamily: 'Pretendard-Bold',
+                fontSize: headerTitleFontSize,
+                lineHeight: headerTitleFontSize + 4,
+                letterSpacing: -0.5,
+                color: '#ffffff',
+              }}>
               Tool Box Meeting
             </Text>
           </View>
@@ -422,49 +527,63 @@ export default function TbmListScreen() {
 
       {/* ── Scrollable Content ── */}
       <ScrollView
+        {...scrollViewAndroidProps}
         className="flex-1"
-        style={{ paddingTop: scrollPadTop }}
-        contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 16) + 24, gap: 20, paddingHorizontal: 16 }}
+        style={{ flex: 1 }}
+        contentContainerStyle={{
+          paddingTop: scrollPadTop,
+          paddingBottom: Math.max(insets.bottom, 8) + 24,
+          paddingHorizontal: pagePaddingX,
+        }}
+        contentContainerClassName="gap-6"
         showsVerticalScrollIndicator={false}>
-
-        {/* ── 오늘의 TBM ── */}
-        {todayTbm ? <TodayHeroCard item={todayTbm} /> : <NoTodayCard />}
-
-        {/* ── 통계 ── */}
-        <StatsRow items={MOCK_TBMS} />
-
-        {/* ── 이전 기록 ── */}
-        <View style={{ gap: 10 }}>
-          <View className="flex-row items-center justify-between">
-            <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 13, lineHeight: 16, letterSpacing: -0.2, color: 'rgba(0,7,20,0.45)' }}>
-              {s.tbm.previousRecords}
-            </Text>
-            <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 12, lineHeight: 14, color: 'rgba(0,7,20,0.35)', letterSpacing: -0.15 }}>
-              {filteredPast.length}건
-            </Text>
-          </View>
-
-          {/* 필터 탭 */}
-          <FilterTabs active={filter} onChange={setFilter} />
-
-          {/* 리스트 */}
-          {filteredPast.length > 0 ? (
-            <View style={{ gap: 8 }}>
-              {filteredPast.map((item) => (
-                <PastTbmCard key={item.id} item={item} />
-              ))}
-            </View>
-          ) : (
-            <View
-              className="items-center rounded-2xl py-10"
-              style={{ backgroundColor: 'rgba(0,0,47,0.03)', borderWidth: 1, borderColor: 'rgba(0,0,47,0.07)' }}>
-              <ClipboardList color="#94a3b8" size={32} strokeWidth={1.5} />
-              <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 14, lineHeight: 17, color: '#94a3b8', marginTop: 10, letterSpacing: -0.2 }}>
-                {s.tbm.noRecordsForStatus}
+        <CenteredColumn maxWidth={contentColumnMaxWidth}>
+          {/* ── 오늘의 TBM 섹션 ── */}
+          <View style={{ gap: 10 }}>
+            <View className="flex-row items-center gap-2">
+              <View className="h-3.5 w-1 rounded-full bg-[#3e63dd]" />
+              <Text style={{ fontFamily: 'Pretendard-SemiBold', fontSize: 12, letterSpacing: 0.6, color: '#3e63dd' }}>
+                {s.tbm.todayBadge}
               </Text>
             </View>
-          )}
-        </View>
+            {todayTbm ? <TodayHeroCard item={todayTbm} /> : <NoTodayCard />}
+          </View>
+
+          {/* ── 섹션 구분선 ── */}
+          <View style={{ height: 1, backgroundColor: 'rgba(0,0,47,0.07)', marginVertical: 4 }} />
+
+          {/* ── 이전 기록 섹션 ── */}
+          <View style={{ gap: 14 }}>
+            {/* 섹션 헤더 */}
+            <View className="flex-row items-center gap-2">
+              <View className="h-3.5 w-1 rounded-full bg-[#64748b]" />
+              <Text style={{ fontFamily: 'Pretendard-SemiBold', fontSize: 12, letterSpacing: 0.6, color: '#64748b' }}>
+                {s.tbm.previousRecords}
+              </Text>
+            </View>
+
+            {/* 필터 탭 (건수 통합) */}
+            <FilterTabs active={filter} onChange={setFilter} counts={tabCounts} />
+
+            {/* 리스트 */}
+            {filteredPast.length > 0 ? (
+              <View style={{ gap: 10 }}>
+                {filteredPast.map((item) => (
+                  <PastTbmCard key={item.id} item={item} />
+                ))}
+              </View>
+            ) : (
+              <View
+                className="items-center rounded-2xl py-12"
+                style={{ backgroundColor: 'rgba(0,0,47,0.03)', borderWidth: 1, borderColor: 'rgba(0,0,47,0.07)' }}>
+                <ClipboardList color="#94a3b8" size={32} strokeWidth={1.5} />
+                <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 14, lineHeight: 17, color: '#94a3b8', marginTop: 10, letterSpacing: -0.2 }}>
+                  {s.tbm.noRecordsForStatus}
+                </Text>
+              </View>
+            )}
+          </View>
+        </CenteredColumn>
       </ScrollView>
     </View>
   );

@@ -5,17 +5,25 @@ import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Pressable, ScrollView, Text, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { scrollViewAndroidProps } from '@/constants/scrollViewAndroid';
 import { SITE_LOCATION_CITY } from '@/constants/site';
 import { getSuggestionStats, MOCK_SUGGESTIONS } from '@/constants/suggestions';
+import {
+  formatTbmDateLabelDot,
+  getTbmPendingCheckCount,
+  isTbmScheduledToday,
+  MOCK_TBMS,
+} from '@/constants/tbm';
 import { useDrawer } from '@/contexts/DrawerContext';
 import { useLang } from '@/contexts/LangContext';
 import { useCurrentWeather } from '@/hooks/useCurrentWeather';
 import {
   EmergencyActionCard,
+  EMERGENCY_CAROUSEL_CARD_MIN_HEIGHT,
   EMERGENCY_CAROUSEL_CARD_WIDTH,
-  EMERGENCY_CAROUSEL_GAP,
 } from '@/components/EmergencyActionCard';
 import { TbmTodayCard } from '@/components/TbmTodayCard';
+import { emergencyCarouselCardMinHeight, useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 
 /** MAI-01 — Figma node 90:811 */
 export default function HomeScreen() {
@@ -28,9 +36,20 @@ export default function HomeScreen() {
   const headerPadBottom = 8;
   const headerBlockH = 62 + headerPadBottom;
   const scrollPadTop = insets.top + headerBlockH + 24;
+  const todayTbm = useMemo(() => MOCK_TBMS.find((t) => isTbmScheduledToday(t.scheduledAt)), []);
+  const todayTbmDateLabel = todayTbm ? formatTbmDateLabelDot(todayTbm.scheduledAt) : '—';
+  const todayTbmPending = todayTbm ? getTbmPendingCheckCount(todayTbm) : 0;
   const { width: windowWidth } = useWindowDimensions();
-  const carouselSidePad = Math.max(0, (windowWidth - EMERGENCY_CAROUSEL_CARD_WIDTH) / 2);
-  const carouselStep = EMERGENCY_CAROUSEL_CARD_WIDTH + EMERGENCY_CAROUSEL_GAP;
+  const {
+    pagePaddingX,
+    cardColumnMaxWidth,
+    emergencyCardWidth,
+    emergencyCarouselGap,
+    headerTitleFontSize,
+  } = useResponsiveLayout();
+  const carouselSidePad = Math.max(0, (windowWidth - emergencyCardWidth) / 2);
+  const carouselStep = emergencyCardWidth + emergencyCarouselGap;
+  const emergencyCarouselMinH = emergencyCarouselCardMinHeight(emergencyCardWidth, EMERGENCY_CAROUSEL_CARD_WIDTH);
   const emergencyCarouselRef = useRef<ScrollView>(null);
   const centerEmergencySos = useCallback(() => {
     emergencyCarouselRef.current?.scrollTo({ x: carouselStep, y: 0, animated: false });
@@ -39,13 +58,14 @@ export default function HomeScreen() {
   useEffect(() => {
     const id = requestAnimationFrame(() => centerEmergencySos());
     return () => cancelAnimationFrame(id);
-  }, [centerEmergencySos, windowWidth]);
+  }, [centerEmergencySos, windowWidth, carouselStep]);
 
   return (
     <View className="flex-1 bg-[#fbfdff]">
       <View
-        className="absolute left-0 right-0 top-0 z-10 px-4"
+        className="absolute left-0 right-0 top-0 z-10"
         style={{
+          paddingHorizontal: pagePaddingX,
           paddingTop: insets.top + 14,
           paddingBottom: headerPadBottom,
           backgroundColor: 'rgba(0, 46, 201, 0.88)',
@@ -53,7 +73,12 @@ export default function HomeScreen() {
         <View className="flex-row items-start gap-2">
           <Text
             className="flex-1 font-bold text-white"
-            style={{ fontFamily: 'Pretendard-Bold', fontSize: 20, lineHeight: 32, letterSpacing: -0.5 }}>
+            style={{
+              fontFamily: 'Pretendard-Bold',
+              fontSize: headerTitleFontSize,
+              lineHeight: headerTitleFontSize + 12,
+              letterSpacing: -0.5,
+            }}>
             {s.home.headerTitle}
           </Text>
           <Pressable
@@ -66,17 +91,22 @@ export default function HomeScreen() {
       </View>
 
       <ScrollView
+        {...scrollViewAndroidProps}
         className="flex-1"
-        style={{ paddingTop: scrollPadTop }}
-        contentContainerStyle={{ paddingBottom: 16, gap: 16 }}
+        style={{ flex: 1 }}
+        contentContainerStyle={{
+          paddingTop: scrollPadTop,
+          paddingBottom: Math.max(insets.bottom, 8) + 16,
+        }}
+        contentContainerClassName="gap-4"
         showsVerticalScrollIndicator={false}>
         {/* 현장 날씨 — 브랜드 톤에 맞춘 카드 UI */}
-        <View className="px-4">
+        <View style={{ paddingHorizontal: pagePaddingX }}>
           <View
             className="max-w-[480px] self-center rounded-[20px] border border-[rgba(0,0,47,0.08)] bg-white"
             style={{
               width: '100%',
-              maxWidth: 343,
+              maxWidth: cardColumnMaxWidth,
               shadowColor: '#002ec9',
               shadowOffset: { width: 0, height: 10 },
               shadowOpacity: 0.08,
@@ -233,39 +263,45 @@ export default function HomeScreen() {
         </View>
 
         {/* 오늘의 TBM — TbmTodayCard */}
-        <View className="px-4">
-          <TbmTodayCard pendingCount={8} dateLabel="2026.03.25" />
+        <View style={{ paddingHorizontal: pagePaddingX }}>
+          <TbmTodayCard
+            pendingCount={todayTbm != null ? todayTbmPending : 8}
+            dateLabel={todayTbm != null ? todayTbmDateLabel : '—'}
+            maxWidth={cardColumnMaxWidth}
+          />
         </View>
 
         {/* 긴급 조치 캐러셀: 위험원 보고 | 긴급 SOS(초기 중앙) | 작업 중지 */}
         <View style={{ overflow: 'visible' }}>
           <ScrollView
+            {...scrollViewAndroidProps}
             ref={emergencyCarouselRef}
             horizontal
             showsHorizontalScrollIndicator={false}
             className="max-w-full"
+            style={{ minHeight: Math.max(EMERGENCY_CAROUSEL_CARD_MIN_HEIGHT, emergencyCarouselMinH) }}
             decelerationRate="fast"
             snapToInterval={carouselStep}
             snapToAlignment="start"
             contentContainerStyle={{
-              gap: EMERGENCY_CAROUSEL_GAP,
+              gap: emergencyCarouselGap,
               paddingLeft: carouselSidePad,
               paddingRight: carouselSidePad,
               paddingVertical: 0,
             }}>
-            <EmergencyActionCard variant="hazard" onPress={() => {}} />
-            <EmergencyActionCard variant="sos" onPress={() => {}} />
-            <EmergencyActionCard variant="stop" onPress={() => {}} />
+            <EmergencyActionCard variant="hazard" cardWidth={emergencyCardWidth} onPress={() => {}} />
+            <EmergencyActionCard variant="sos" cardWidth={emergencyCardWidth} onPress={() => {}} />
+            <EmergencyActionCard variant="stop" cardWidth={emergencyCardWidth} onPress={() => {}} />
           </ScrollView>
         </View>
 
         {/* 건의사항 — 날씨 섹션과 동일 카드 골격 (보더·섀도우·그라데이션·하단 영역) */}
-        <View className="px-4">
+        <View style={{ paddingHorizontal: pagePaddingX }}>
           <View
             className="max-w-[480px] self-center rounded-[20px] border border-[rgba(0,0,47,0.08)] bg-white"
             style={{
               width: '100%',
-              maxWidth: 343,
+              maxWidth: cardColumnMaxWidth,
               shadowColor: '#002ec9',
               shadowOffset: { width: 0, height: 10 },
               shadowOpacity: 0.08,

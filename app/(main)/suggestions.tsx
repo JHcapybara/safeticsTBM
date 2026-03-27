@@ -9,11 +9,14 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { setStatusBarStyle } from 'expo-status-bar';
 
+import { CenteredColumn } from '@/components/CenteredColumn';
 import { SuggestionFeedCard } from '@/components/SuggestionFeedCard';
+import { scrollViewAndroidProps } from '@/constants/scrollViewAndroid';
 import { getMySuggestions } from '@/constants/suggestions';
 import { useDrawer } from '@/contexts/DrawerContext';
 import { useLang } from '@/contexts/LangContext';
 import { useSuggestions } from '@/contexts/SuggestionContext';
+import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 
 type SuggestionFilter = 'all' | 'completed' | 'in_progress' | 'pending';
 
@@ -31,6 +34,7 @@ export default function SuggestionsScreen() {
   const insets = useSafeAreaInsets();
   const [suggestionFilter, setSuggestionFilter] = useState<SuggestionFilter>('all');
   const [showMineOnly, setShowMineOnly] = useState(false);
+  const { pagePaddingX, contentColumnMaxWidth, headerTitleFontSize } = useResponsiveLayout();
 
   const filteredSuggestions = useMemo(() => {
     const base = showMineOnly ? getMySuggestions(suggestions, currentUserName) : suggestions;
@@ -65,8 +69,9 @@ export default function SuggestionsScreen() {
   return (
     <View className="flex-1 bg-[#fbfdff]">
       <View
-        className="absolute left-0 right-0 top-0 z-10 px-4"
+        className="absolute left-0 right-0 top-0 z-10"
         style={{
+          paddingHorizontal: pagePaddingX,
           paddingTop: insets.top + 14,
           paddingBottom: HEADER_PAD_BOTTOM,
           backgroundColor: 'rgba(0, 46, 201, 0.88)',
@@ -81,7 +86,12 @@ export default function SuggestionsScreen() {
           </Pressable>
           <Text
             className="flex-1 text-center font-bold text-white"
-            style={{ fontFamily: 'Pretendard-Bold', fontSize: 20, lineHeight: 32, letterSpacing: -0.5 }}>
+            style={{
+              fontFamily: 'Pretendard-Bold',
+              fontSize: headerTitleFontSize,
+              lineHeight: headerTitleFontSize + 12,
+              letterSpacing: -0.5,
+            }}>
             {s.suggestions.title}
           </Text>
           <Pressable
@@ -94,8 +104,10 @@ export default function SuggestionsScreen() {
       </View>
       {showCreatedToast ? (
         <View
-          className="absolute left-4 right-4 z-20 rounded-xl border border-[rgba(62,99,221,0.2)] bg-white px-3 py-2"
+          className="absolute z-20 rounded-xl border border-[rgba(62,99,221,0.2)] bg-white px-3 py-2"
           style={{
+            left: pagePaddingX,
+            right: pagePaddingX,
             top: insets.top + 62,
             shadowColor: '#0f172a',
             shadowOffset: { width: 0, height: 4 },
@@ -110,14 +122,21 @@ export default function SuggestionsScreen() {
       ) : null}
 
       <ScrollView
+        {...scrollViewAndroidProps}
         className="flex-1"
-        style={{ paddingTop: scrollPadTop }}
-        contentContainerStyle={{ paddingBottom: 28, paddingHorizontal: 16 }}
+        style={{ flex: 1 }}
+        contentContainerStyle={{
+          paddingTop: scrollPadTop,
+          paddingBottom: Math.max(insets.bottom, 8) + 24,
+          paddingHorizontal: pagePaddingX,
+        }}
         showsVerticalScrollIndicator={false}>
+        <CenteredColumn maxWidth={contentColumnMaxWidth}>
         <ScrollView
+          {...scrollViewAndroidProps}
           horizontal
           showsHorizontalScrollIndicator={false}
-          className="mb-3 max-w-[480px] self-center"
+          className="mb-3"
           style={{ width: '100%' }}
           contentContainerStyle={{ gap: 8, paddingRight: 8 }}>
           {(
@@ -153,7 +172,7 @@ export default function SuggestionsScreen() {
           })}
         </ScrollView>
 
-        <View className="mb-4 max-w-[480px] flex-row gap-2 self-center" style={{ width: '100%' }}>
+        <View className="mb-4 flex-row gap-2" style={{ width: '100%' }}>
           <Pressable
             onPress={() => setShowMineOnly((v) => !v)}
             className="h-11 flex-1 flex-row items-center justify-center gap-2 rounded-xl border border-[rgba(0,0,47,0.12)] bg-white active:bg-slate-50"
@@ -192,14 +211,14 @@ export default function SuggestionsScreen() {
           </Pressable>
         </View>
 
-        <View className="max-w-[480px] self-center" style={{ width: '100%', gap: 12 }}>
+        <View style={{ width: '100%', gap: 12 }}>
           {filteredSuggestions.map((item) => (
             <SuggestionFeedCard key={item.id} item={item} />
           ))}
         </View>
 
         {filteredSuggestions.length === 0 ? (
-          <View className="mt-4 max-w-[480px] items-center self-center rounded-2xl border border-dashed border-slate-200 py-10" style={{ width: '100%' }}>
+          <View className="mt-4 items-center rounded-2xl border border-dashed border-slate-200 py-10" style={{ width: '100%' }}>
             <Sparkles color="#94a3b8" size={28} strokeWidth={1.5} />
             <Text
               style={{
@@ -213,6 +232,7 @@ export default function SuggestionsScreen() {
             </Text>
           </View>
         ) : null}
+        </CenteredColumn>
 
       </ScrollView>
     </View>

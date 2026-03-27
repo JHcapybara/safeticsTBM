@@ -50,12 +50,13 @@
     "labelOtp": "인증번호",
     "labelPhone": "휴대폰 번호",
     "labelName": "이름",
-    "placeholderIdLogin": "아이디를 입력하세요.",
+    "placeholderIdLogin": "이메일을 입력하세요.",
     "placeholderPassword": "비밀번호를 입력하세요.",
     "placeholderOtp": "인증번호를 입력해주세요.",
     "placeholderPhone": "01012345678 형식으로 입력해주세요.",
     "placeholderName": "이름을 입력해주세요.",
     "button": "로그인",
+    "register": "회원가입",
     "contact": "문의하기",
     "invalidCredentials": "아이디 또는 비밀번호가 올바르지 않습니다.",
     "otpNotAvailable": "인증번호 로그인은 아직 지원하지 않습니다. 아이디 로그인을 이용해 주세요."
@@ -133,7 +134,14 @@
     "disclaimer": "본인은 위 TBM 내용을 모두 확인하였으며 안전 수칙을 준수할 것을 확인합니다.",
     "completeTbm": "TBM 완료하기",
     "signBeforeComplete": "서명 후 완료 가능합니다",
-    "confirmAll": "위 내용을 모두 확인함"
+    "confirmAll": "확인하였음",
+    "confirmIssue": "이슈 있음",
+    "confirmFlashTitle": "확인 완료",
+    "issueFlashTitle": "이슈 보고됨",
+    "signatureUploading": "전송 중…",
+    "signatureUploadErrorTitle": "서명 전송 실패",
+    "signatureUploadErrorMessage": "서명 이미지를 업로드하지 못했습니다. 네트워크를 확인한 뒤 다시 시도해 주세요.",
+    "signatureUploadErrorOk": "확인"
   },
 
   "emergency": {

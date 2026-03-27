@@ -4,11 +4,14 @@ import { setStatusBarStyle } from 'expo-status-bar';
 import { ArrowLeft, Menu } from 'lucide-react-native';
 import { useCallback, useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { CenteredColumn } from '@/components/CenteredColumn';
+import { scrollViewAndroidProps } from '@/constants/scrollViewAndroid';
 import { useDrawer } from '@/contexts/DrawerContext';
 import { useLang } from '@/contexts/LangContext';
 import { useSuggestions } from '@/contexts/SuggestionContext';
+import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 
 const HEADER_BG = 'rgba(0, 46, 201, 0.88)';
 
@@ -16,7 +19,7 @@ export default function SuggestionNewScreen() {
   const { s } = useLang();
   const { openDrawer } = useDrawer();
   const { addSuggestion } = useSuggestions();
-  const insets = useSafeAreaInsets();
+  const { pagePaddingX, contentColumnMaxWidth, headerTitleFontSize } = useResponsiveLayout();
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -45,7 +48,7 @@ export default function SuggestionNewScreen() {
     <View className="flex-1 bg-[#fbfdff]">
       <View style={{ backgroundColor: HEADER_BG }}>
         <SafeAreaView edges={['top']}>
-          <View className="flex-row items-center gap-2 px-4 pb-2 pt-2">
+          <View className="flex-row items-center gap-2 pb-2 pt-2" style={{ paddingHorizontal: pagePaddingX }}>
             <Pressable
               onPress={onBack}
               accessibilityRole="button"
@@ -54,8 +57,13 @@ export default function SuggestionNewScreen() {
               <ArrowLeft color="#fff" size={18} strokeWidth={2} />
             </Pressable>
             <Text
-              className="flex-1 text-center text-[20px] font-bold text-white"
-              style={{ fontFamily: 'Pretendard-Bold', lineHeight: 32, letterSpacing: -0.5 }}>
+              className="flex-1 text-center font-bold text-white"
+              style={{
+                fontFamily: 'Pretendard-Bold',
+                fontSize: headerTitleFontSize,
+                lineHeight: headerTitleFontSize + 12,
+                letterSpacing: -0.5,
+              }}>
               {s.suggestions.newPost}
             </Text>
             <Pressable
@@ -70,13 +78,12 @@ export default function SuggestionNewScreen() {
       </View>
 
       <ScrollView
+        {...scrollViewAndroidProps}
         className="flex-1"
-        contentContainerStyle={{
-          paddingHorizontal: 16,
-          paddingTop: 16,
-          paddingBottom: Math.max(insets.bottom, 24) + 8,
-        }}
+        style={{ flex: 1 }}
+        contentContainerStyle={{ paddingHorizontal: pagePaddingX, paddingTop: 16, paddingBottom: 32 }}
         showsVerticalScrollIndicator={false}>
+        <CenteredColumn maxWidth={contentColumnMaxWidth}>
         <View
           className="rounded-2xl border border-[rgba(0,0,47,0.08)] bg-white p-4"
           style={{
@@ -133,6 +140,7 @@ export default function SuggestionNewScreen() {
             </Pressable>
           </View>
         </View>
+        </CenteredColumn>
       </ScrollView>
     </View>
   );

@@ -36,6 +36,8 @@ export type TbmItem = {
   appearsInHistoryList?: boolean;
   /** 완료·참여 시 서명 목업(SVG Path d). 미참여/미완료는 없음 */
   signatureSvgPaths?: string[];
+  /** 스토리지 업로드 후 서버가 내려준 서명 이미지 공개 URL */
+  signatureImageUrl?: string;
 };
 
 /** 목업 서명 필기 (실제 저장 서명 연동 시 교체) */
@@ -45,7 +47,100 @@ export const DEFAULT_MOCK_SIGNATURE_PATHS = [
   "M 104 48 L 128 36",
 ];
 
+/** 번들 로드 시점의 로컬 ‘오늘’ 09:00 — 실기기에서 당일 TBM 노출 테스트용 */
+const MOCK_SCHEDULED_AT_TODAY = (() => {
+  const d = new Date();
+  const y = d.getFullYear();
+  const mo = String(d.getMonth() + 1).padStart(2, "0");
+  const da = String(d.getDate()).padStart(2, "0");
+  return `${y}-${mo}-${da}T09:00:00`;
+})();
+
+export function isTbmScheduledToday(iso: string): boolean {
+  const target = new Date(iso);
+  const now = new Date();
+  return (
+    target.getFullYear() === now.getFullYear() &&
+    target.getMonth() === now.getMonth() &&
+    target.getDate() === now.getDate()
+  );
+}
+
+/** 홈 카드 등: YYYY.MM.DD */
+export function formatTbmDateLabelDot(iso: string): string {
+  const d = new Date(iso);
+  return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`;
+}
+
+/** 홈 ‘확인 N건’ — 미확인 주의·PPE + (특별공지 있고 미완료 시 1) */
+export function getTbmPendingCheckCount(t: TbmItem): number {
+  let n = t.cautionItems.filter((i) => !i.done).length;
+  n += t.ppeItems.filter((i) => !i.done).length;
+  if (t.specialNotice.trim() && t.status !== "completed") {
+    n += 1;
+  }
+  return n;
+}
+
 export const MOCK_TBMS: TbmItem[] = [
+  {
+    id: "mock-today",
+    title: "(목업) 당일 안전작업 TBM",
+    siteName: "세이프틱스 강남 사업장",
+    workArea: "3층 동측 데크",
+    scheduledAt: MOCK_SCHEDULED_AT_TODAY,
+    supervisor: "최현장",
+    attendeeCount: 8,
+    status: "scheduled",
+    workSummary: "거푸목 해체 및 자재양중 사전 회의. 신규 투입 인력 2명 합류.",
+    cautionItems: [
+      {
+        id: "mtd-ca1",
+        hazardFactor: "추락",
+        harmfulFactor: "개구부·난간 미설치",
+        question: "개구부 덮개·난간 설치 상태를 확인하고 작업 동선을 확보했습니까?",
+        done: false,
+      },
+      {
+        id: "mtd-ca2",
+        hazardFactor: "낙하물",
+        harmfulFactor: "상부 시공 잔재물",
+        question: "상부 작업 구역에서 추락·낙하물 방지 조치가 완료되었습니까?",
+        done: false,
+      },
+      {
+        id: "mtd-ca3",
+        hazardFactor: "협착",
+        harmfulFactor: "크레인·펌프카 붐대",
+        question: "장비 선회·신축 반경 내 작업자 대피 및 통제가 되어 있습니까?",
+        done: true,
+      },
+    ],
+    ppeItems: [
+      {
+        id: "mtd-pp1",
+        hazardFactor: "충격·낙하",
+        harmfulFactor: "두부·발 보호",
+        question: "안전모·안전화 착용 및 턱끈·지지대 상태를 확인했습니까?",
+        done: false,
+      },
+      {
+        id: "mtd-pp2",
+        hazardFactor: "비산",
+        harmfulFactor: "눈·피부",
+        question: "절단·비산 작업 시 보안면/보안경 착용이 필요한 작업입니까? 착용 확인",
+        done: false,
+      },
+    ],
+    specialNotice:
+      "오후 2시 예정된 모바일크레인 양중 작업 전, 유도자·신호수 지정 및 무전 채널 공유는 필수입니다. 강풍 시 양중 전면 중단.",
+    riskFactors: ["추락·낙하물·협착", "신규 인력에 의한 절차 미숙"],
+    safetyMeasures: ["개구부 통제·난간 점검", "장비 선회 반경 이중 확인", "PPE 착용 점검"],
+    checklist: [
+      { id: "m1", label: "작업허가 및 인원·장비 확인", done: false },
+      { id: "m2", label: "비상연락망·집결지 공유", done: false },
+    ],
+  },
   {
     id: "1",
     title: "철골 조립 작업 TBM",
@@ -610,4 +705,105 @@ export function formatTbmDate(iso: string): string {
 export function getHistorySignaturePaths(tbm: TbmItem): string[] | null {
   if (tbm.status !== "completed") return null;
   return tbm.signatureSvgPaths?.length ? tbm.signatureSvgPaths : DEFAULT_MOCK_SIGNATURE_PATHS;
+}
+
+// ─── 서명 데이터 (체크리스트 → 저장/API) — 상세 화면 viewBox 160×80 과 맞춤 ─────────
+
+export type SignaturePoint = { x: number; y: number };
+
+const SIGNATURE_VIEW_W = 160;
+const SIGNATURE_VIEW_H = 80;
+
+/** 한 획을 SVG Path `d` 로 변환 (점 1개도 보이도록 미세 선분 처리) */
+export function signatureStrokeToPathD(points: SignaturePoint[]): string {
+  if (points.length === 0) return "";
+  if (points.length === 1) {
+    const { x, y } = points[0];
+    return `M${x} ${y} L${x + 0.5} ${y + 0.5}`;
+  }
+  return points.reduce(
+    (acc, pt, i) => acc + (i === 0 ? `M${pt.x} ${pt.y}` : ` L${pt.x} ${pt.y}`),
+    "",
+  );
+}
+
+export function signatureStrokesToPathDs(strokes: SignaturePoint[][]): string[] {
+  return strokes.map(signatureStrokeToPathD).filter((d) => d.length > 0);
+}
+
+/**
+ * 앱 내부·저장용
+ * - `svgPathDs`: 앱 내 상세 화면 SVG 렌더링용 (viewBox 160×80 정규화 좌표)
+ * - `signatureImageUrl`: 스토리지 업로드 API 응답 URL (DB에는 이 값만 저장)
+ * - `uploadedAt`: 업로드 완료 시각 (ISO 8601)
+ */
+export type TbmSignatureExport = {
+  svgPathDs: string[];
+  signatureImageUrl: string;
+  uploadedAt: string;
+};
+
+/**
+ * TBM 완료·동기화용 — 긴 Base64 대신 공개 URL만 전송
+ */
+export type TbmSignatureApiPayload = {
+  v: 3;
+  signature_image_url: string;
+  timestamp: string;
+};
+
+/** 캔버스 좌표를 기록 상세 SVG viewBox(160×80) 기준으로 스케일 */
+export function normalizeSignatureForExport(
+  strokes: SignaturePoint[][],
+  canvasW: number,
+  canvasH: number,
+): Pick<TbmSignatureExport, "svgPathDs"> {
+  const w = Math.max(canvasW, 1);
+  const h = Math.max(canvasH, 1);
+  const sx = SIGNATURE_VIEW_W / w;
+  const sy = SIGNATURE_VIEW_H / h;
+  const strokesNorm = strokes.map((line) =>
+    line.map((p) => ({
+      x: Math.round(p.x * sx * 10) / 10,
+      y: Math.round(p.y * sy * 10) / 10,
+    })),
+  );
+  return {
+    svgPathDs: signatureStrokesToPathDs(strokesNorm),
+  };
+}
+
+/**
+ * API 전송 직전 직렬화
+ * 예: `{"v":3,"signature_image_url":"https://cdn.../sign.jpg","timestamp":"2026-03-27T10:00:00.000Z"}`
+ */
+export function serializeSignaturePayloadForApi(exp: TbmSignatureExport): string {
+  const payload: TbmSignatureApiPayload = {
+    v: 3,
+    signature_image_url: exp.signatureImageUrl,
+    timestamp: exp.uploadedAt,
+  };
+  return JSON.stringify(payload);
+}
+
+/**
+ * 체크리스트·서명 완료를 로컬 목업 데이터에 반영.
+ * 실서비스에서는 동일 페이로드로 서버 API 호출 후 응답에 맞게 상태 갱신하면 됩니다.
+ */
+export function applyLocalTbmSignatureCompletion(
+  tbmId: string,
+  svgPathDs: string[],
+  signatureImageUrl?: string,
+): void {
+  const t = MOCK_TBMS.find((x) => x.id === tbmId);
+  if (!t) return;
+  t.signatureSvgPaths = svgPathDs.length ? [...svgPathDs] : undefined;
+  t.signatureImageUrl = signatureImageUrl || undefined;
+  t.status = "completed";
+  t.cautionItems = t.cautionItems.map((i) => ({ ...i, done: true }));
+  t.ppeItems = t.ppeItems.map((i) => ({ ...i, done: true }));
+  t.checklist = t.checklist.map((c) => ({ ...c, done: true }));
+  if (isTbmScheduledToday(t.scheduledAt)) {
+    t.appearsInHistoryList = true;
+  }
 }

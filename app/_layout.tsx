@@ -6,6 +6,7 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { View } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/components/useColorScheme';
@@ -54,14 +55,16 @@ function RootLayoutNav() {
   const pretendardHeader = { fontFamily: 'Pretendard-SemiBold' as const };
 
   return (
+    <SafeAreaProvider>
     <LangProvider>
     <WeatherProvider>
     <AuthProvider>
     <SuggestionProvider>
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <View className="flex-1 font-sans" style={{ flex: 1 }}>
+      <View className="flex-1 font-sans">
         <Stack
           screenOptions={{
+            contentStyle: { flex: 1 },
             headerTitleStyle: pretendardHeader,
             headerBackTitleStyle: { fontFamily: 'Pretendard-Regular' },
             animation: 'slide_from_right',
@@ -87,5 +90,6 @@ function RootLayoutNav() {
     </AuthProvider>
     </WeatherProvider>
     </LangProvider>
+    </SafeAreaProvider>
   );
 }

@@ -6,8 +6,11 @@ import { useCallback } from 'react';
 import { Pressable, ScrollView, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { CenteredColumn } from '@/components/CenteredColumn';
+import { scrollViewAndroidProps } from '@/constants/scrollViewAndroid';
 import { useDrawer } from '@/contexts/DrawerContext';
 import { useLang } from '@/contexts/LangContext';
+import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 import { useNotificationPrefs } from '@/hooks/useNotificationPrefs';
 
 const HEADER_BG = 'rgba(0, 46, 201, 0.8)';
@@ -55,6 +58,7 @@ export default function ProfileScreen() {
   const { s } = useLang();
   const { openDrawer } = useDrawer();
   const { pushApp, pushTbm, setPushApp, setPushTbm } = useNotificationPrefs();
+  const { pagePaddingX, contentColumnMaxWidth, headerTitleFontSize } = useResponsiveLayout();
 
   useFocusEffect(
     useCallback(() => {
@@ -72,7 +76,7 @@ export default function ProfileScreen() {
     <View className="flex-1 bg-[#fbfdff]">
       <View style={{ backgroundColor: HEADER_BG }}>
         <SafeAreaView edges={['top']}>
-          <View className="flex-row items-center gap-2 px-4 pb-2 pt-2">
+          <View className="flex-row items-center gap-2 pb-2 pt-2" style={{ paddingHorizontal: pagePaddingX }}>
             <Pressable
               onPress={onBack}
               accessibilityRole="button"
@@ -81,8 +85,13 @@ export default function ProfileScreen() {
               <ArrowLeft color="#fff" size={18} strokeWidth={2} />
             </Pressable>
             <Text
-              className="flex-1 text-center text-[20px] font-bold text-white"
-              style={{ fontFamily: 'Pretendard-Bold', lineHeight: 32, letterSpacing: -0.5 }}>
+              className="flex-1 text-center font-bold text-white"
+              style={{
+                fontFamily: 'Pretendard-Bold',
+                fontSize: headerTitleFontSize,
+                lineHeight: headerTitleFontSize + 12,
+                letterSpacing: -0.5,
+              }}>
               {s.settings.headerTitle}
             </Text>
             <Pressable
@@ -97,21 +106,26 @@ export default function ProfileScreen() {
       </View>
 
       <ScrollView
+        {...scrollViewAndroidProps}
         className="flex-1"
-        contentContainerClassName="gap-2 px-4 pb-[34px] pt-4"
+        style={{ flex: 1 }}
+        contentContainerStyle={{ paddingHorizontal: pagePaddingX, paddingTop: 16, paddingBottom: 32 }}
+        contentContainerClassName="gap-2"
         showsVerticalScrollIndicator={false}>
-        <SettingRow
-          title={s.settings.pushAppTitle}
-          description={s.settings.pushAppDesc}
-          value={pushApp}
-          onValueChange={setPushApp}
-        />
-        <SettingRow
-          title={s.settings.pushTbmTitle}
-          description={s.settings.pushTbmDesc}
-          value={pushTbm}
-          onValueChange={setPushTbm}
-        />
+        <CenteredColumn maxWidth={contentColumnMaxWidth}>
+          <SettingRow
+            title={s.settings.pushAppTitle}
+            description={s.settings.pushAppDesc}
+            value={pushApp}
+            onValueChange={setPushApp}
+          />
+          <SettingRow
+            title={s.settings.pushTbmTitle}
+            description={s.settings.pushTbmDesc}
+            value={pushTbm}
+            onValueChange={setPushTbm}
+          />
+        </CenteredColumn>
       </ScrollView>
     </View>
   );

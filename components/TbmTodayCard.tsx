@@ -3,25 +3,28 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { CheckCircle2, ChevronRight, ClipboardList } from 'lucide-react-native';
 import { Pressable, Text, View } from 'react-native';
 
+import { PHONE_NARROW_CARD_MAX } from '@/hooks/useResponsiveLayout';
 import { useLang } from '@/contexts/LangContext';
 
 type Props = {
   pendingCount?: number;
   dateLabel?: string;
+  /** 태블릿에서 카드·컬럼 최대 너비 (기본 모바일 343) */
+  maxWidth?: number;
 };
 
 /**
  * 홈 — 오늘의 Tool Box Meeting
  * 브랜드 블루 + 라운드·보더·섀도우 리듬을 날씨/긴급 카드와 통일 (NativeWind 토큰)
  */
-export function TbmTodayCard({ pendingCount = 8, dateLabel = '2026.03.25' }: Props) {
+export function TbmTodayCard({ pendingCount = 8, dateLabel = '2026.03.25', maxWidth = PHONE_NARROW_CARD_MAX }: Props) {
   const { s } = useLang();
   return (
     <View
       className="max-w-[480px] self-center overflow-hidden rounded-2xl border border-[rgba(0,0,47,0.08)] bg-white"
       style={{
         width: '100%',
-        maxWidth: 343,
+        maxWidth,
         shadowColor: '#002ec9',
         shadowOffset: { width: 0, height: 8 },
         shadowOpacity: 0.07,

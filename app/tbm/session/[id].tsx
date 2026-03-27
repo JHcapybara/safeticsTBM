@@ -1,26 +1,17 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { Href, Link, useLocalSearchParams, useRouter } from 'expo-router';
-import {
-  AlertTriangle,
-  ArrowLeft,
-  Bell,
-  CheckCircle2,
-  ChevronRight,
-  CloudSun,
-  RefreshCw,
-  ShieldCheck,
-  Wind,
-  XCircle,
-} from 'lucide-react-native';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { AlertTriangle, ArrowLeft, ChevronRight, CloudSun, Droplets, RefreshCw, ShieldCheck, Wind } from 'lucide-react-native';
+import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { CenteredColumn } from '@/components/CenteredColumn';
 import { SITE_LOCATION_CITY } from '@/constants/site';
 import { getTbmById } from '@/constants/tbm';
 import { useLang } from '@/contexts/LangContext';
 import { useCurrentWeather } from '@/hooks/useCurrentWeather';
+import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 
-/** TBM-02 — Today's TBM 개요 화면 (Figma node 71:1962) */
+/** TBM-02 — Today's TBM 요약 페이지 */
 
 function formatDateKR(iso: string) {
   const d = new Date(iso);
@@ -28,32 +19,27 @@ function formatDateKR(iso: string) {
   return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')} (${days[d.getDay()]})`;
 }
 
-type BadgeVariant = 'green' | 'blue' | 'purple' | 'red' | 'yellow' | 'sky' | 'gray';
+type BadgeVariant = 'green' | 'blue' | 'red' | 'yellow' | 'gray';
 
 const BADGE_STYLES: Record<BadgeVariant, { bg: string; text: string }> = {
-  green:  { bg: 'rgba(0,164,51,0.10)',  text: 'rgba(0,113,63,0.87)' },
-  blue:   { bg: 'rgba(0,71,241,0.07)',  text: 'rgba(0,43,183,0.77)' },
-  purple: { bg: 'rgba(142,0,241,0.07)', text: 'rgba(82,0,154,0.73)' },
-  red:    { bg: 'rgba(243,0,13,0.08)',  text: 'rgba(196,0,6,0.83)'  },
-  yellow: { bg: 'rgba(255,222,0,0.24)', text: '#ab6400'              },
-  sky:    { bg: 'rgba(0,179,238,0.12)', text: '#00749e'              },
-  gray:   { bg: 'rgba(0,0,51,0.06)',    text: 'rgba(0,7,20,0.62)'   },
+  green: { bg: 'rgba(0,164,51,0.10)', text: 'rgba(0,113,63,0.87)' },
+  blue: { bg: 'rgba(0,71,241,0.09)', text: 'rgba(0,43,183,0.84)' },
+  red: { bg: 'rgba(243,0,13,0.08)', text: 'rgba(196,0,6,0.83)' },
+  yellow: { bg: 'rgba(255,222,0,0.24)', text: '#ab6400' },
+  gray: { bg: 'rgba(0,0,51,0.06)', text: 'rgba(0,7,20,0.62)' },
 };
 
 function Badge({ label, variant }: { label: string; variant: BadgeVariant }) {
   const s = BADGE_STYLES[variant];
   return (
-    <View
-      className="items-center justify-center rounded overflow-hidden"
-      style={{ backgroundColor: s.bg, paddingHorizontal: 7, paddingVertical: 3 }}>
-      <Text style={{ fontFamily: 'Pretendard-Medium', fontSize: 12, letterSpacing: -0.3, color: s.text, lineHeight: 18 }}>
+    <View className="items-center justify-center rounded-lg" style={{ backgroundColor: s.bg, paddingHorizontal: 10, paddingVertical: 4 }}>
+      <Text style={{ fontFamily: 'Pretendard-Medium', fontSize: 16, lineHeight: 20, letterSpacing: -0.25, color: s.text }}>
         {label}
       </Text>
     </View>
   );
 }
 
-// ─── Main ────────────────────────────────────────────────────────────────────
 
 export default function TbmSessionScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -61,19 +47,20 @@ export default function TbmSessionScreen() {
   const insets = useSafeAreaInsets();
   const { s } = useLang();
   const { weather, weatherLoading, refreshWeather } = useCurrentWeather();
+  const { pagePaddingX, contentColumnMaxWidth, headerTitleFontSize } = useResponsiveLayout();
 
   const tbm = id ? getTbmById(String(id)) : undefined;
 
   const headerBlockH = 40 + 8;
-  const scrollPadTop = insets.top + headerBlockH + 24;
+  const contentPadTop = insets.top + headerBlockH + 16;
   const bottomBarH = 98;
 
   if (!tbm) {
     return (
       <View className="flex-1 items-center justify-center bg-[#fbfdff]">
-        <Text style={{ fontFamily: 'Pretendard-Regular', color: '#64748b' }}>{s.tbm.notFound}</Text>
+        <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 16, color: '#64748b' }}>{s.tbm.notFound}</Text>
         <Pressable onPress={() => router.back()} className="mt-4 rounded-xl bg-[#3e63dd] px-6 py-3">
-          <Text style={{ fontFamily: 'Pretendard-SemiBold', color: '#ffffff' }}>{s.common.goBack}</Text>
+          <Text style={{ fontFamily: 'Pretendard-SemiBold', fontSize: 16, color: '#ffffff' }}>{s.common.goBack}</Text>
         </Pressable>
       </View>
     );
@@ -81,9 +68,8 @@ export default function TbmSessionScreen() {
 
   const cautionDone = tbm.cautionItems.every((i) => i.done);
   const ppeDone = tbm.ppeItems.every((i) => i.done);
-  const totalItems = tbm.cautionItems.length + tbm.ppeItems.length + (tbm.specialNotice ? 1 : 0);
+  const totalItems = tbm.cautionItems.length + tbm.ppeItems.length;
   const doneItems = (cautionDone ? tbm.cautionItems.length : 0) + (ppeDone ? tbm.ppeItems.length : 0);
-  const overallPct = totalItems > 0 ? doneItems / totalItems : 0;
 
   const checklistCategories = [
     {
@@ -93,10 +79,6 @@ export default function TbmSessionScreen() {
       icon: AlertTriangle,
       iconColor: '#d97706',
       iconBg: 'rgba(217,119,6,0.10)',
-      badge: {
-        label: `${tbm.cautionItems.length} 건`,
-        variant: (tbm.status === 'completed' || cautionDone ? 'green' : 'yellow') as BadgeVariant,
-      },
       done: tbm.status === 'completed' || cautionDone,
     },
     {
@@ -106,30 +88,17 @@ export default function TbmSessionScreen() {
       icon: ShieldCheck,
       iconColor: '#0d9488',
       iconBg: 'rgba(13,148,136,0.10)',
-      badge: {
-        label: `${tbm.ppeItems.length} 건`,
-        variant: (tbm.status === 'completed' || ppeDone ? 'green' : 'blue') as BadgeVariant,
-      },
       done: tbm.status === 'completed' || ppeDone,
-    },
-    {
-      id: 'notice',
-      label: s.checklist.specialNotice,
-      count: 1,
-      icon: Bell,
-      iconColor: '#3e63dd',
-      iconBg: 'rgba(62,99,221,0.10)',
-      badge: { label: '1 건', variant: (tbm.status === 'completed' ? 'green' : 'sky') as BadgeVariant },
-      done: tbm.status === 'completed',
     },
   ];
 
   return (
     <View className="flex-1 bg-[#fbfdff]">
-      {/* ── Sticky Header ── */}
+      {/* Header */}
       <View
-        className="absolute left-0 right-0 top-0 z-10 px-4"
+        className="absolute left-0 right-0 top-0 z-10"
         style={{
+          paddingHorizontal: pagePaddingX,
           paddingTop: insets.top + 14,
           paddingBottom: 8,
           backgroundColor: 'rgba(0, 46, 201, 0.88)',
@@ -142,7 +111,13 @@ export default function TbmSessionScreen() {
             <ArrowLeft color="#ffffff" size={18} strokeWidth={2} />
           </Pressable>
           <View className="flex-1 items-center justify-center">
-            <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 20, letterSpacing: -0.5, color: '#ffffff' }}>
+            <Text
+              style={{
+                fontFamily: 'Pretendard-Bold',
+                fontSize: headerTitleFontSize,
+                letterSpacing: -0.5,
+                color: '#ffffff',
+              }}>
               {s.tbm.sessionTitle}
             </Text>
           </View>
@@ -150,260 +125,184 @@ export default function TbmSessionScreen() {
         </View>
       </View>
 
-      {/* ── Scrollable Content ── */}
-      <ScrollView
-        className="flex-1"
-        style={{ paddingTop: scrollPadTop }}
-        contentContainerStyle={{
+      {/* Content */}
+      <View
+        style={{
+          flex: 1,
+          paddingTop: contentPadTop,
           paddingBottom: bottomBarH + Math.max(insets.bottom, 16) + 8,
-          paddingHorizontal: 16,
-          gap: 10,
-        }}
-        showsVerticalScrollIndicator={false}>
-
-        {/* ── 기본 정보 ── */}
-        <View
-          className="w-full overflow-hidden rounded-2xl border"
-          style={{
-            borderColor: 'rgba(0,0,47,0.1)',
-            shadowColor: '#002ec9',
-            shadowOffset: { width: 0, height: 6 },
-            shadowOpacity: 0.08,
-            shadowRadius: 20,
-            elevation: 3,
-          }}>
-          <LinearGradient
-            colors={['rgba(62,99,221,0.07)', '#ffffff']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={{ padding: 16, gap: 10 }}>
-            {/* 헤더 행 */}
-            <View className="flex-row items-center justify-between">
-              <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 13, lineHeight: 16, letterSpacing: -0.3, color: 'rgba(0,7,20,0.45)' }}>
-                {s.tbm.basicInfo}
-              </Text>
-              <Text style={{ fontFamily: 'Pretendard-Medium', fontSize: 13, lineHeight: 16, letterSpacing: -0.3, color: '#1c2024' }}>
-                {formatDateKR(tbm.scheduledAt)}
-              </Text>
-            </View>
-
-            <View style={{ height: 1, backgroundColor: 'rgba(0,0,47,0.08)' }} />
-
-            {/* 담당자 정보 */}
-            <View className="flex-row items-center" style={{ gap: 12 }}>
-              {/* 아바타 */}
-              <View
-                className="items-center justify-center overflow-hidden rounded-xl"
-                style={{ width: 44, height: 44, backgroundColor: '#3e63dd' }}>
-                <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 18, lineHeight: 22, color: '#ffffff' }}>
-                  {tbm.supervisor.charAt(0)}
+          paddingHorizontal: pagePaddingX,
+        }}>
+        <CenteredColumn maxWidth={contentColumnMaxWidth} style={{ flex: 1, gap: 12 }}>
+          {/* 기본 정보 — 다크 배너형 */}
+          <View
+            className="w-full overflow-hidden rounded-2xl"
+            style={{
+              shadowColor: '#001080',
+              shadowOffset: { width: 0, height: 6 },
+              shadowOpacity: 0.22,
+              shadowRadius: 18,
+              elevation: 5,
+            }}>
+            <LinearGradient
+              colors={['#1e3a8a', '#3e63dd']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{ paddingHorizontal: 16, paddingVertical: 16, gap: 14 }}>
+              {/* 상단: 섹션 레이블 + 날짜 */}
+              <View className="flex-row items-center justify-between">
+                <View
+                  className="flex-row items-center rounded-lg"
+                  style={{ backgroundColor: 'rgba(255,255,255,0.15)', paddingHorizontal: 10, paddingVertical: 4, gap: 5 }}>
+                  <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 12, letterSpacing: 1.2, color: 'rgba(255,255,255,0.75)' }}>
+                    TODAY'S TBM
+                  </Text>
+                </View>
+                <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 14, lineHeight: 18, color: 'rgba(255,255,255,0.65)' }}>
+                  {formatDateKR(tbm.scheduledAt)}
                 </Text>
               </View>
 
-              {/* 이름 + 역할 */}
-              <View style={{ gap: 3, flex: 1 }}>
-                <Text style={{ fontFamily: 'Pretendard-SemiBold', fontSize: 15, lineHeight: 18, letterSpacing: -0.35, color: '#1c2024' }}>
+              {/* 중간: 책임자 이름 크게 */}
+              <View style={{ gap: 2 }}>
+                <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 13, lineHeight: 17, letterSpacing: -0.1, color: 'rgba(255,255,255,0.6)' }}>
+                  {s.tbm.workManager}
+                </Text>
+                <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 26, lineHeight: 32, letterSpacing: -0.8, color: '#ffffff' }}>
                   {tbm.supervisor}
                 </Text>
-                <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 13, lineHeight: 16, letterSpacing: -0.25, color: 'rgba(0,7,20,0.55)' }}>
-                  {s.tbm.workManager} · {tbm.attendeeCount}명 참석
-                </Text>
               </View>
 
-              {/* 세로 구분선 */}
-              <View style={{ width: 1, alignSelf: 'stretch', backgroundColor: 'rgba(0,0,47,0.1)' }} />
-
-              {/* 관리 감독자 */}
-              <View className="items-end" style={{ gap: 4 }}>
-                <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 12, lineHeight: 14, letterSpacing: -0.2, color: 'rgba(0,7,20,0.5)' }}>
-                  {s.tbm.supervisingManager}
-                </Text>
-                <Badge label={s.tbm.tbmManager} variant="green" />
+              {/* 하단: 구분선 + 현장/참석 */}
+              <View style={{ height: 1, backgroundColor: 'rgba(255,255,255,0.18)' }} />
+              <View className="flex-row items-center justify-between">
+                <View style={{ gap: 2 }}>
+                  <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 13, color: 'rgba(255,255,255,0.55)' }}>
+                    현장
+                  </Text>
+                  <Text style={{ fontFamily: 'Pretendard-SemiBold', fontSize: 16, lineHeight: 20, color: '#ffffff' }}>
+                    {tbm.siteName}
+                  </Text>
+                </View>
+                <View style={{ width: 1, height: 32, backgroundColor: 'rgba(255,255,255,0.2)' }} />
+                <View style={{ gap: 2, alignItems: 'flex-end' }}>
+                  <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 13, color: 'rgba(255,255,255,0.55)' }}>
+                    참석 인원
+                  </Text>
+                  <Text style={{ fontFamily: 'Pretendard-SemiBold', fontSize: 16, lineHeight: 20, color: '#ffffff' }}>
+                    {tbm.attendeeCount}명
+                  </Text>
+                </View>
               </View>
-            </View>
-          </LinearGradient>
-        </View>
+            </LinearGradient>
+          </View>
 
-        {/* ── 현장 날씨 ── */}
-        <View
-          className="w-full overflow-hidden rounded-2xl border"
-          style={{
-            borderColor: 'rgba(0,0,47,0.08)',
-            shadowColor: '#002ec9',
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.05,
-            shadowRadius: 16,
-            elevation: 2,
-          }}>
-          <LinearGradient
-            colors={['#f4f7ff', '#ffffff']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={{ padding: 16, gap: 12 }}>
+          {/* 체크리스트 (특별 공지 제거) */}
+          <View
+            className="w-full overflow-hidden rounded-2xl border"
+            style={{
+              borderColor: 'rgba(0,0,47,0.08)',
+              backgroundColor: '#ffffff',
+              shadowColor: '#002ec9',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.05,
+              shadowRadius: 14,
+              elevation: 2,
+              padding: 14,
+              gap: 10,
+            }}>
             <View className="flex-row items-center justify-between">
-              <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 13, lineHeight: 16, letterSpacing: -0.3, color: 'rgba(0,7,20,0.45)' }}>
-                {s.weather.title}
-              </Text>
-              <View className="flex-row items-center gap-1.5">
-                <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 11, lineHeight: 13, letterSpacing: -0.2, color: 'rgba(0,7,20,0.35)' }}>
-                  {(weather?.locationLabel ?? SITE_LOCATION_CITY)} · {s.weather.realtime}
-                </Text>
-                <Pressable
-                  onPress={() => void refreshWeather()}
-                  disabled={weatherLoading}
-                  accessibilityRole="button"
-                  accessibilityLabel={s.weather.refreshA11y}
-                  hitSlop={8}
-                  className="rounded-md border border-[rgba(0,0,47,0.08)] bg-white/90 p-1.5 active:opacity-70"
-                  style={{ opacity: weatherLoading ? 0.5 : 1 }}>
-                  <RefreshCw color="#3e63dd" size={16} strokeWidth={2} />
-                </Pressable>
-              </View>
-            </View>
-
-            <View style={{ height: 1, backgroundColor: 'rgba(0,0,47,0.06)' }} />
-
-            <View className="flex-row" style={{ gap: 8 }}>
-              {/* 기온 카드 */}
-              <View
-                className="flex-1 flex-row items-center overflow-hidden rounded-xl"
-                style={{ backgroundColor: 'rgba(255,255,255,0.9)', borderWidth: 1, borderColor: 'rgba(0,0,47,0.06)', padding: 12, gap: 10 }}>
-                <View className="items-center justify-center rounded-xl" style={{ width: 44, height: 44, backgroundColor: '#e0e1e6' }}>
-                  <CloudSun color="#475569" size={22} strokeWidth={2} />
-                </View>
-                <View style={{ gap: 2 }}>
-                  <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 22, letterSpacing: -0.6, color: '#1c2024', lineHeight: 28 }}>
-                    {weather ? `${Math.round(weather.tempC)}°C` : '--°C'}
-                  </Text>
-                  <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 13, lineHeight: 16, letterSpacing: -0.2, color: 'rgba(0,7,20,0.55)' }}>
-                    {weather ? weather.conditionLabel : weatherLoading ? s.weather.loading : s.weather.unavailable}
-                  </Text>
-                </View>
-              </View>
-
-              {/* 풍속 카드 */}
-              <View
-                className="flex-1 flex-row items-center overflow-hidden rounded-xl"
-                style={{ backgroundColor: 'rgba(255,255,255,0.9)', borderWidth: 1, borderColor: 'rgba(0,0,47,0.06)', padding: 12, gap: 10 }}>
-                <View className="items-center justify-center rounded-xl" style={{ width: 44, height: 44, backgroundColor: '#8b8d98' }}>
-                  <Wind color="#ffffff" size={22} strokeWidth={2} />
-                </View>
-                <View style={{ gap: 2 }}>
-                  <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 22, letterSpacing: -0.6, color: '#1c2024', lineHeight: 28 }}>
-                    {weather ? `${Math.round(weather.windKmh)}km/h` : '--km/h'}
-                  </Text>
-                  <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 13, lineHeight: 16, letterSpacing: -0.2, color: 'rgba(0,7,20,0.55)' }}>
-                    {weather ? `${s.weather.humidity} ${Math.round(weather.humidity)}%` : s.weather.loading}
-                  </Text>
-                </View>
-              </View>
-            </View>
-          </LinearGradient>
-        </View>
-
-        {/* ── 체크리스트 ── */}
-        <View
-          className="w-full overflow-hidden rounded-2xl border"
-          style={{
-            borderColor: 'rgba(0,0,47,0.08)',
-            backgroundColor: '#ffffff',
-            shadowColor: '#002ec9',
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.05,
-            shadowRadius: 16,
-            elevation: 2,
-            padding: 16,
-            gap: 12,
-          }}>
-          {/* 섹션 헤더 */}
-          <View className="flex-row items-center justify-between">
-              <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 13, lineHeight: 16, letterSpacing: -0.3, color: 'rgba(0,7,20,0.45)' }}>
+              <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 16, lineHeight: 20, color: 'rgba(0,7,20,0.45)' }}>
                 {s.tbm.checklist}
               </Text>
-            <View
-              className="overflow-hidden rounded-full"
-              style={{ backgroundColor: 'rgba(0,0,51,0.05)', paddingHorizontal: 8, paddingVertical: 3 }}>
-              <Text style={{ fontFamily: 'Pretendard-Medium', fontSize: 12, lineHeight: 14, letterSpacing: -0.25, color: 'rgba(0,7,20,0.5)' }}>
-                {doneItems} / {totalItems} 완료
-              </Text>
             </View>
-          </View>
 
-          {/* 진행률 바 */}
-          <View className="h-1.5 w-full overflow-hidden rounded-full" style={{ backgroundColor: 'rgba(0,0,47,0.07)' }}>
-            <View
-              className="h-full rounded-full"
-              style={{
-                width: `${overallPct * 100}%`,
-                backgroundColor: overallPct >= 1 ? '#22c55e' : '#3e63dd',
-              }}
-            />
-          </View>
+            {/* 현장 날씨 — 1행 인라인 */}
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, flex: 1 }}>
+                <CloudSun color="rgba(0,7,20,0.38)" size={14} strokeWidth={1.8} />
+                <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 13, color: 'rgba(0,7,20,0.40)' }}>온도</Text>
+                <Text style={{ fontFamily: 'Pretendard-SemiBold', fontSize: 14, letterSpacing: -0.2, color: 'rgba(0,7,20,0.72)' }}>
+                  {weather ? `${Math.round(weather.tempC)}°C` : '--°C'}
+                </Text>
+              </View>
+              <View style={{ width: 1, height: 14, backgroundColor: 'rgba(0,0,0,0.10)', marginHorizontal: 4 }} />
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, flex: 1, justifyContent: 'center' }}>
+                <Droplets color="rgba(0,7,20,0.38)" size={14} strokeWidth={1.8} />
+                <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 13, color: 'rgba(0,7,20,0.40)' }}>습도</Text>
+                <Text style={{ fontFamily: 'Pretendard-SemiBold', fontSize: 14, letterSpacing: -0.2, color: 'rgba(0,7,20,0.72)' }}>
+                  {weather ? `${Math.round(weather.humidity)}%` : '--%'}
+                </Text>
+              </View>
+              <View style={{ width: 1, height: 14, backgroundColor: 'rgba(0,0,0,0.10)', marginHorizontal: 4 }} />
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, flex: 1, justifyContent: 'flex-end' }}>
+                <Wind color="rgba(0,7,20,0.38)" size={14} strokeWidth={1.8} />
+                <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 13, color: 'rgba(0,7,20,0.40)' }}>풍량</Text>
+                <Text style={{ fontFamily: 'Pretendard-SemiBold', fontSize: 14, letterSpacing: -0.2, color: 'rgba(0,7,20,0.72)' }}>
+                  {weather ? `${Math.round(weather.windKmh)}km/h` : '--'}
+                </Text>
+              </View>
+              <Pressable
+                onPress={() => void refreshWeather()}
+                disabled={weatherLoading}
+                accessibilityRole="button"
+                accessibilityLabel={s.weather.refreshA11y}
+                hitSlop={10}
+                style={{
+                  opacity: weatherLoading ? 0.35 : 1,
+                  marginLeft: 8,
+                  padding: 4,
+                }}>
+                <RefreshCw color="rgba(0,7,20,0.30)" size={12} strokeWidth={2} />
+              </Pressable>
+            </View>
 
-          <View style={{ height: 1, backgroundColor: 'rgba(0,0,47,0.07)' }} />
+            <View style={{ height: 1, backgroundColor: 'rgba(0,0,47,0.07)' }} />
 
-          {/* 카테고리 행 */}
-          {checklistCategories.map((cat, idx) => {
-            const Icon = cat.icon;
-            return (
-              <View key={cat.id}>
-                {idx > 0 && <View style={{ height: 1, backgroundColor: 'rgba(0,0,47,0.06)', marginVertical: 4 }} />}
-                <View className="flex-row items-center" style={{ gap: 10, paddingVertical: 2 }}>
-                  {/* 아이콘 */}
-                  <View
-                    className="items-center justify-center rounded-lg"
-                    style={{ width: 32, height: 32, backgroundColor: cat.iconBg }}>
-                    <Icon color={cat.iconColor} size={16} strokeWidth={2} />
-                  </View>
-                  {/* 레이블 */}
-                  <Text
-                    className="flex-1"
-                    style={{ fontFamily: 'Pretendard-Regular', fontSize: 14, lineHeight: 17, letterSpacing: -0.35, color: 'rgba(0,7,20,0.7)' }}
-                    numberOfLines={1}>
-                    {cat.label}
-                  </Text>
-                  {/* 배지 + 상태 아이콘 */}
-                  <View className="flex-row items-center" style={{ gap: 8 }}>
-                    <Badge label={cat.badge.label} variant={cat.badge.variant} />
-                    {cat.done
-                      ? <CheckCircle2 color="#22c55e" size={16} strokeWidth={2} />
-                      : <XCircle color="#e5484d" size={16} strokeWidth={2} />
-                    }
+            {checklistCategories.map((cat, idx) => {
+              const Icon = cat.icon;
+              return (
+                <View key={cat.id}>
+                  {idx > 0 && <View style={{ height: 1, backgroundColor: 'rgba(0,0,47,0.06)', marginVertical: 6 }} />}
+                  <View className="flex-row items-center" style={{ gap: 10, paddingVertical: 2 }}>
+                    <View className="items-center justify-center rounded-lg" style={{ width: 34, height: 34, backgroundColor: cat.iconBg }}>
+                      <Icon color={cat.iconColor} size={18} strokeWidth={2} />
+                    </View>
+                    <Text
+                      className="flex-1"
+                      style={{ fontFamily: 'Pretendard-SemiBold', fontSize: 20, lineHeight: 24, letterSpacing: -0.35, color: 'rgba(0,7,20,0.8)' }}
+                      numberOfLines={1}>
+                      {cat.label}
+                    </Text>
+                    <View className="flex-row items-center" style={{ gap: 8 }}>
+                      <Badge
+                        label={`${cat.count} 건`}
+                        variant={cat.done ? 'green' : cat.id === 'caution' ? 'yellow' : 'blue'}
+                      />
+                    </View>
                   </View>
                 </View>
-              </View>
-            );
-          })}
+              );
+            })}
 
-          <View style={{ height: 1, backgroundColor: 'rgba(0,0,47,0.1)', marginVertical: 2 }} />
+            <View style={{ height: 1, backgroundColor: 'rgba(0,0,47,0.1)', marginVertical: 2 }} />
 
-          {/* 전체 합계 */}
-          <View className="flex-row items-center justify-between">
-            <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 14, lineHeight: 17, letterSpacing: -0.35, color: 'rgba(0,7,20,0.55)' }}>
-              {s.tbm.totalSummary}
-            </Text>
-            <View className="flex-row items-center" style={{ gap: 8 }}>
-              <Badge label={`${doneItems} / ${totalItems} 건`} variant="gray" />
-              <Text style={{
-                fontFamily: 'Pretendard-SemiBold',
-                fontSize: 13,
-                lineHeight: 16,
-                letterSpacing: -0.3,
-                color: overallPct >= 1 ? '#15803d' : tbm.status === 'incomplete' ? '#b91c1c' : '#3e63dd',
-              }}>
-                {overallPct >= 1 ? s.status.completed : tbm.status === 'incomplete' ? s.status.incomplete : s.common.inProgress}
+            <View className="flex-row items-center justify-between">
+              <Text style={{ fontFamily: 'Pretendard-Regular', fontSize: 16, lineHeight: 20, color: 'rgba(0,7,20,0.55)' }}>
+                {s.tbm.totalSummary}
               </Text>
+              <Badge label={`${doneItems} / ${totalItems} 건`} variant="gray" />
             </View>
           </View>
-        </View>
-      </ScrollView>
+        </CenteredColumn>
+      </View>
 
-      {/* ── 하단 고정 시작하기 버튼 ── */}
+      {/* 하단 고정 시작하기 버튼 */}
       <View
         className="absolute bottom-0 left-0 right-0"
         style={{
           backgroundColor: '#ffffff',
-          paddingHorizontal: 16,
+          paddingHorizontal: pagePaddingX,
           paddingTop: 12,
           paddingBottom: Math.max(insets.bottom, 16) + 4,
           shadowColor: '#000',
@@ -427,3 +326,4 @@ export default function TbmSessionScreen() {
     </View>
   );
 }
+

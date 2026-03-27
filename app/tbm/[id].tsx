@@ -12,16 +12,19 @@ import {
   ShieldAlert,
   User,
 } from 'lucide-react-native';
-import { Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { CenteredColumn } from '@/components/CenteredColumn';
+import { scrollViewAndroidProps } from '@/constants/scrollViewAndroid';
 import {
   formatTbmDateTime,
   getHistorySignaturePaths,
   getTbmById,
 } from '@/constants/tbm';
 import { useLang } from '@/contexts/LangContext';
+import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 
 /** 과거/완료 TBM 기록 상세 — 오늘의 TBM(세션) 플로우와 구분, 요약·서명 열람용 */
 
@@ -60,10 +63,11 @@ export default function TbmDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { width: windowWidth } = useWindowDimensions();
+  const { width, pagePaddingX, contentColumnMaxWidth, headerTitleFontSize, isTablet } = useResponsiveLayout();
   const { s } = useLang();
   const tbm = id ? getTbmById(String(id)) : undefined;
-  const signatureW = Math.min(windowWidth - 32, 360);
+  const columnInner = contentColumnMaxWidth ?? width - pagePaddingX * 2;
+  const signatureW = Math.min(columnInner - 32, isTablet ? 560 : 360);
 
   const headerBlockH = 40 + 8;
   const scrollPadTop = insets.top + headerBlockH + 24;
@@ -85,8 +89,9 @@ export default function TbmDetailScreen() {
   return (
     <View className="flex-1 bg-[#fbfdff]">
       <View
-        className="absolute left-0 right-0 top-0 z-10 px-4"
+        className="absolute left-0 right-0 top-0 z-10"
         style={{
+          paddingHorizontal: pagePaddingX,
           paddingTop: insets.top + 14,
           paddingBottom: 8,
           backgroundColor: 'rgba(0, 46, 201, 0.88)',
@@ -99,7 +104,13 @@ export default function TbmDetailScreen() {
             <ArrowLeft color="#ffffff" size={18} strokeWidth={2} />
           </Pressable>
           <View className="flex-1 items-center justify-center">
-            <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 20, letterSpacing: -0.5, color: '#ffffff' }}>
+            <Text
+              style={{
+                fontFamily: 'Pretendard-Bold',
+                fontSize: headerTitleFontSize,
+                letterSpacing: -0.5,
+                color: '#ffffff',
+              }}>
               {s.tbm.recordDetailTitle}
             </Text>
           </View>
@@ -108,14 +119,17 @@ export default function TbmDetailScreen() {
       </View>
 
       <ScrollView
+        {...scrollViewAndroidProps}
         className="flex-1"
-        style={{ paddingTop: scrollPadTop }}
+        style={{ flex: 1 }}
         contentContainerStyle={{
-          paddingBottom: Math.max(insets.bottom, 24) + 16,
-          paddingHorizontal: 16,
-          gap: 10,
+          paddingTop: scrollPadTop,
+          paddingBottom: Math.max(insets.bottom, 8) + 24,
+          paddingHorizontal: pagePaddingX,
         }}
+        contentContainerClassName="gap-2.5"
         showsVerticalScrollIndicator={false}>
+        <CenteredColumn maxWidth={contentColumnMaxWidth}>
 
         {/* 기본 정보 */}
         <View
@@ -312,6 +326,7 @@ export default function TbmDetailScreen() {
             </Text>
           )}
         </View>
+        </CenteredColumn>
       </ScrollView>
     </View>
   );
