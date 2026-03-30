@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TBM App — 누락 화면 감사</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f0f4ff;
+    color: #1e293b;
+    min-height: 100vh;
+    padding: 32px 24px;
+  }
+  h1 {
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.6px;
+    color: #0f172a;
+    margin-bottom: 4px;
+  }
+  .subtitle {
+    font-size: 14px;
+    color: #64748b;
+    margin-bottom: 28px;
+    letter-spacing: -0.2px;
+  }
+
+  /* 요약 카드 */
+  .summary-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 14px;
+    margin-bottom: 32px;
+  }
+  .stat-card {
+    background: white;
+    border-radius: 16px;
+    padding: 18px 20px;
+    box-shadow: 0 4px 16px rgba(62,99,221,0.08);
+    border: 1px solid rgba(0,46,201,0.07);
+  }
+  .stat-card .num {
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .stat-card .label {
+    font-size: 13px;
+    color: #64748b;
+    letter-spacing: -0.2px;
+  }
+  .stat-card.exist .num { color: #22c55e; }
+  .stat-card.missing .num { color: #e5484d; }
+  .stat-card.partial .num { color: #f59e0b; }
+  .stat-card.total .num { color: #3e63dd; }
+
+  /* 섹션 */
+  .section {
+    margin-bottom: 28px;
+  }
+  .section-title {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    color: #475569;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    padding-left: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-title::before {
+    content: '';
+    display: inline-block;
+    width: 3px;
+    height: 16px;
+    border-radius: 2px;
+    background: #3e63dd;
+  }
+
+  .screen-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+  }
+
+  .screen-card {
+    background: white;
+    border-radius: 14px;
+    padding: 16px 18px;
+    border: 1.5px solid transparent;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: transform 0.15s, box-shadow 0.15s;
+    cursor: default;
+  }
+  .screen-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(62,99,221,0.1);
+  }
+
+  .screen-card.exists {
+    border-color: rgba(34,197,94,0.25);
+    background: linear-gradient(135deg, #f0fdf4, #ffffff);
+  }
+  .screen-card.missing {
+    border-color: rgba(229,72,77,0.28);
+    background: linear-gradient(135deg, #fff1f2, #ffffff);
+  }
+  .screen-card.partial {
+    border-color: rgba(245,158,11,0.3);
+    background: linear-gradient(135deg, #fffbeb, #ffffff);
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .screen-name {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    color: #0f172a;
+  }
+
+  .badge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 20px;
+    white-space: nowrap;
+    letter-spacing: 0.3px;
+  }
+  .badge.exists   { background: rgba(34,197,94,0.12);  color: #15803d; }
+  .badge.missing  { background: rgba(229,72,77,0.12);  color: #b91c1c; }
+  .badge.partial  { background: rgba(245,158,11,0.14); color: #92400e; }
+
+  .screen-path {
+    font-size: 11.5px;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    color: #94a3b8;
+    letter-spacing: -0.1px;
+  }
+
+  .screen-note {
+    font-size: 12.5px;
+    color: #475569;
+    line-height: 1.55;
+    letter-spacing: -0.15px;
+    margin-top: 2px;
+  }
+
+  .priority-tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 4px;
+    letter-spacing: 0.3px;
+    margin-top: 4px;
+  }
+  .priority-high   { background: #fee2e2; color: #b91c1c; }
+  .priority-medium { background: #fef3c7; color: #92400e; }
+  .priority-low    { background: #e0f2fe; color: #075985; }
+
+  /* 범례 */
+  .legend {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+    font-size: 13px;
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot.exists  { background: #22c55e; }
+  .dot.missing { background: #e5484d; }
+  .dot.partial { background: #f59e0b; }
+
+  hr { border: none; border-top: 1px solid rgba(0,0,0,0.07); margin: 28px 0; }
+
+  footer {
+    text-align: center;
+    font-size: 12px;
+    color: #94a3b8;
+    margin-top: 40px;
+    padding-bottom: 16px;
+  }
+</style>
+</head>
+<body>
+
+<h1>TBM App — 화면 감사 리포트</h1>
+<p class="subtitle">현재 존재하는 화면 vs 필수적으로 필요한 누락 화면 분석 · 2026.03.30</p>
+
+<!-- 요약 카드 -->
+<div class="summary-row">
+  <div class="stat-card total">
+    <div class="num">19</div>
+    <div class="label">분석 대상 화면 수</div>
+  </div>
+  <div class="stat-card exist">
+    <div class="num">10</div>
+    <div class="label">구현 완료</div>
+  </div>
+  <div class="stat-card partial">
+    <div class="num">2</div>
+    <div class="label">부분 구현</div>
+  </div>
+  <div class="stat-card missing">
+    <div class="num">7</div>
+    <div class="label">누락 (미구현)</div>
+  </div>
+</div>
+
+<!-- 범례 -->
+<div class="legend">
+  <div class="legend-item"><span class="dot exists"></span> 구현 완료</div>
+  <div class="legend-item"><span class="dot partial"></span> 부분 구현 / 기능 미완성</div>
+  <div class="legend-item"><span class="dot missing"></span> 화면 없음 (누락)</div>
+</div>
+
+<!-- 인증 플로우 -->
+<div class="section">
+  <div class="section-title">인증 (Auth)</div>
+  <div class="screen-grid">
+
+    <div class="screen-card exists">
+      <div class="card-header">
+        <span class="screen-name">🔐 로그인</span>
+        <span class="badge exists">구현 완료</span>
+      </div>
+      <span class="screen-path">app/index.tsx · LGN-01</span>
+      <p class="screen-note">아이디/비밀번호 탭 + OTP 탭. KO/EN 언어 전환 포함.</p>
+    </div>
+
+    <div class="screen-card missing">
+      <div class="card-header">
+        <span class="screen-name">🔑 비밀번호 찾기</span>
+        <span class="badge missing">누락</span>
+      </div>
+      <span class="screen-path">app/forgot-password.tsx — 없음</span>
+      <p class="screen-note">로그인 화면에 "비밀번호 찾기" 링크가 없고, 해당 화면 자체가 존재하지 않음. 현재는 OTP 탭으로 우회하지만 흐름이 불명확함.</p>
+      <span class="priority-tag priority-high">우선순위: HIGH</span>
+    </div>
+
+    <div class="screen-card missing">
+      <div class="card-header">
+        <span class="screen-name">📋 온보딩 / 스플래시</span>
+        <span class="badge missing">누락</span>
+      </div>
+      <span class="screen-path">app/onboarding.tsx — 없음</span>
+      <p class="screen-note">최초 설치 후 앱 소개나 권한 요청(푸시 알림, 위치) 안내 화면 없음. 로그인 직전에 필요.</p>
+      <span class="priority-tag priority-medium">우선순위: MEDIUM</span>
+    </div>
+
+  </div>
+</div>
+
+<!-- 메인 / 홈 -->
+<div class="section">
+  <div class="section-title">홈 (Home)</div>
+  <div class="screen-grid">
+
+    <div class="screen-card exists">
+      <div class="card-header">
+        <span class="screen-name">🏠 홈 대시보드</span>
+        <span class="badge exists">구현 완료</span>
+      </div>
+      <span class="screen-path">app/(main)/index.tsx · MAI-01</span>
+      <p class="screen-note">날씨, 오늘 TBM 카드, 긴급조치 캐러셀(위험원/SOS/작업중지), 건의사항 미리보기.</p>
+    </div>
+
+    <div class="screen-card missing">
+      <div class="card-header">
+        <span class="screen-name">⚠️ 위험원 보고 화면</span>
+        <span class="badge missing">누락</span>
+      </div>
+      <span class="screen-path">app/hazard/new.tsx — 없음</span>
+      <p class="screen-note">홈의 "위험원 보고" 카드를 누르면 <code>onPress={() => {}}</code> — 빈 핸들러. 실제 보고 입력 화면이 없음.</p>
+      <span class="priority-tag priority-high">우선순위: HIGH</span>
+    </div>
+
+    <div class="screen-card missing">
+      <div class="card-header">
+        <span class="screen-name">🚨 긴급 SOS 화면</span>
+        <span class="badge missing">누락</span>
+      </div>
+      <span class="screen-path">app/emergency/sos.tsx — 없음</span>
+      <p class="screen-note">SOS 카드 onPress도 빈 핸들러. 비상연락처 다이얼, 신고 확인 UI가 필요. 안전 앱에서 가장 중요한 기능 중 하나.</p>
+      <span class="priority-tag priority-high">우선순위: HIGH</span>
+    </div>
+
+    <div class="screen-card missing">
+      <div class="card-header">
+        <span class="screen-name">✋ 작업 중지 화면</span>
+        <span class="badge missing">누락</span>
+      </div>
+      <span class="screen-path">app/emergency/stop.tsx — 없음</span>
+      <p class="screen-note">"작업 중지" 카드 onPress도 빈 핸들러. 중지 사유 입력 및 관리자 알림 흐름이 없음.</p>
+      <span class="priority-tag priority-high">우선순위: HIGH</span>
+    </div>
+
+  </div>
+</div>
+
+<!-- TBM 플로우 -->
+<div class="section">
+  <div class="section-title">TBM (Tool Box Meeting)</div>
+  <div class="screen-grid">
+
+    <div class="screen-card exists">
+      <div class="card-header">
+        <span class="screen-name">📋 TBM 목록</span>
+        <span class="badge exists">구현 완료</span>
+      </div>
+      <span class="screen-path">app/(main)/tbm.tsx · TBM-01</span>
+      <p class="screen-note">필터(전체/예정/완료/미완료), 오늘 히어로 카드, 과거 TBM 목록.</p>
+    </div>
+
+    <div class="screen-card exists">
+      <div class="card-header">
+        <span class="screen-name">📄 오늘 TBM 세션</span>
+        <span class="badge exists">구현 완료</span>
+      </div>
+      <span class="screen-path">app/tbm/session/[id].tsx · TBM-02</span>
+      <p class="screen-note">날씨, 작업 정보, 위험 요인, 안전 조치 요약. 체크리스트로 이동.</p>
+    </div>
+
+    <div class="screen-card exists">
+      <div class="card-header">
+        <span class="screen-name">✅ TBM 체크리스트 &amp; 서명</span>
+        <span class="badge exists">구현 완료</span>
+      </div>
+      <span class="screen-path">app/tbm/checklist/[id].tsx</span>
+      <p class="screen-note">체크리스트 항목 확인, 서명 캡처, PDF 업로드.</p>
+    </div>
+
+    <div class="screen-card exists">
+      <div class="card-header">
+        <span class="screen-name">🗂️ TBM 기록 상세</span>
+        <span class="badge exists">구현 완료</span>
+      </div>
+      <span class="screen-path">app/tbm/[id].tsx</span>
+      <p class="screen-note">완료된 과거 TBM 요약·서명 이력 열람.</p>
+    </div>
+
+    <div class="screen-card missing">
+      <div class="card-header">
+        <span class="screen-name">➕ TBM 생성 화면</span>
+        <span class="badge missing">누락</span>
+      </div>
+      <span class="screen-path">app/tbm/new.tsx — 없음</span>
+      <p class="screen-note">관리자/현장반장이 새 TBM을 생성하는 화면이 없음. 목록에 생성 버튼이 있어야 하지만 현재 더미 데이터만 표시.</p>
+      <span class="priority-tag priority-high">우선순위: HIGH</span>
+    </div>
+
+    <div class="screen-card partial">
+      <div class="card-header">
+        <span class="screen-name">👥 참석자 관리</span>
+        <span class="badge partial">부분 구현</span>
+      </div>
+      <span class="screen-path">TBM 세션 내 참석자 필드만 존재</span>
+      <p class="screen-note">TBM 세션에 참석자 목록은 있으나, 참석자 추가/확인 전용 화면 없음. 작업자별 서명 확인 흐름도 불완전.</p>
+      <span class="priority-tag priority-medium">우선순위: MEDIUM</span>
+    </div>
+
+  </div>
+</div>
+
+<!-- 건의사항 -->
+<div class="section">
+  <div class="section-title">건의사항 (Suggestions)</div>
+  <div class="screen-grid">
+
+    <div class="screen-card exists">
+      <div class="card-header">
+        <span class="screen-name">💬 건의사항 목록</span>
+        <span class="badge exists">구현 완료</span>
+      </div>
+      <span class="screen-path">app/(main)/suggestions.tsx</span>
+      <p class="screen-note">필터, 피드 형식의 건의 목록.</p>
+    </div>
+
+    <div class="screen-card exists">
+      <div class="card-header">
+        <span class="screen-name">✏️ 건의 작성</span>
+        <span class="badge exists">구현 완료</span>
+      </div>
+      <span class="screen-path">app/(main)/suggestions/new.tsx</span>
+      <p class="screen-note">새 건의사항 작성 폼.</p>
+    </div>
+
+    <div class="screen-card exists">
+      <div class="card-header">
+        <span class="screen-name">🔍 건의 상세</span>
+        <span class="badge exists">구현 완료</span>
+      </div>
+      <span class="screen-path">app/(main)/suggestions/[id].tsx</span>
+      <p class="screen-note">상세 내용 + 댓글 UI.</p>
+    </div>
+
+  </div>
+</div>
+
+<!-- 프로필 / 설정 -->
+<div class="section">
+  <div class="section-title">프로필 &amp; 설정 (Profile / Settings)</div>
+  <div class="screen-grid">
+
+    <div class="screen-card partial">
+      <div class="card-header">
+        <span class="screen-name">⚙️ 설정 (알림)</span>
+        <span class="badge partial">부분 구현</span>
+      </div>
+      <span class="screen-path">app/(main)/profile.tsx</span>
+      <p class="screen-note">푸시 알림 ON/OFF 스위치만 있음. 프로필 정보(이름, 사번, 부서), 비밀번호 변경, 로그아웃 등 기본 설정 기능 없음.</p>
+      <span class="priority-tag priority-medium">우선순위: MEDIUM</span>
+    </div>
+
+    <div class="screen-card missing">
+      <div class="card-header">
+        <span class="screen-name">🔔 알림 목록</span>
+        <span class="badge missing">누락</span>
+      </div>
+      <span class="screen-path">app/notifications.tsx — 없음</span>
+      <p class="screen-note">알림 ON/OFF는 있지만, 수신된 푸시 알림 이력을 볼 수 있는 인박스 화면이 없음.</p>
+      <span class="priority-tag priority-medium">우선순위: MEDIUM</span>
+    </div>
+
+  </div>
+</div>
+
+<hr />
+
+<!-- 우선순위별 작업 요약 -->
+<div class="section">
+  <div class="section-title">우선순위별 구현 순서 제안</div>
+  <div class="screen-grid">
+
+    <div class="screen-card missing" style="border-color: rgba(229,72,77,0.4);">
+      <div class="card-header">
+        <span class="screen-name">🔴 HIGH — 즉시 필요</span>
+      </div>
+      <p class="screen-note" style="line-height:1.8">
+        1. ⚠️ <strong>위험원 보고 화면</strong> — 핵심 안전 기능, 빈 핸들러 상태<br/>
+        2. 🚨 <strong>긴급 SOS 화면</strong> — 비상 연락 흐름 없음<br/>
+        3. ✋ <strong>작업 중지 화면</strong> — 핵심 안전 기능, 빈 핸들러<br/>
+        4. ➕ <strong>TBM 생성 화면</strong> — 관리자가 TBM을 만들 방법 없음<br/>
+        5. 🔑 <strong>비밀번호 찾기</strong> — 자격증명 복구 불가
+      </p>
+    </div>
+
+    <div class="screen-card partial" style="border-color: rgba(245,158,11,0.4);">
+      <div class="card-header">
+        <span class="screen-name">🟡 MEDIUM — 단기 계획</span>
+      </div>
+      <p class="screen-note" style="line-height:1.8">
+        6. 👥 <strong>참석자 관리 화면</strong> — 서명 수집 흐름 완성<br/>
+        7. ⚙️ <strong>프로필 편집 / 로그아웃</strong> — 설정 화면 기능 확장<br/>
+        8. 🔔 <strong>알림 목록 화면</strong> — 알림 이력 인박스<br/>
+        9. 📋 <strong>온보딩</strong> — 최초 설치 안내
+      </p>
+    </div>
+
+  </div>
+</div>
+
+<footer>
+  TBM App 화면 감사 · 2026.03.30 · Safetics / SafetyDesigner
+</footer>
+
+</body>
+</html>

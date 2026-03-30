@@ -47,8 +47,7 @@ export function SuggestionFeedCard({ item }: { item: SuggestionItem }) {
           </Text>
         </View>
         <View
-          className="rounded-full border px-2.5 py-1"
-          style={{ backgroundColor: statusStyle.bg, borderColor: statusStyle.border }}>
+          style={{ backgroundColor: statusStyle.bg, borderWidth: 1, borderColor: statusStyle.border, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 }}>
           <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 12, lineHeight: 14, color: statusStyle.color }}>{statusText}</Text>
         </View>
       </View>

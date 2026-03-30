@@ -175,7 +175,7 @@ export default function SuggestionsScreen() {
         <View className="mb-4 flex-row gap-2" style={{ width: '100%' }}>
           <Pressable
             onPress={() => setShowMineOnly((v) => !v)}
-            className="h-11 flex-1 flex-row items-center justify-center gap-2 rounded-xl border border-[rgba(0,0,47,0.12)] bg-white active:bg-slate-50"
+            className="h-11 flex-1 flex-row items-center justify-center gap-2 rounded-xl active:opacity-90"
             style={{
               shadowColor: '#002ec9',
               shadowOffset: { width: 0, height: 3 },
@@ -183,6 +183,7 @@ export default function SuggestionsScreen() {
               shadowRadius: 10,
               elevation: 2,
               backgroundColor: showMineOnly ? 'rgba(62,99,221,0.08)' : '#fff',
+              borderWidth: 1,
               borderColor: showMineOnly ? 'rgba(62,99,221,0.45)' : 'rgba(0,0,47,0.12)',
             }}>
             <PenLine color={showMineOnly ? '#1d4ed8' : '#475569'} size={17} strokeWidth={2} />

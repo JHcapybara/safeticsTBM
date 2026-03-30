@@ -83,6 +83,14 @@ function RootLayoutNav() {
             name="tbm/checklist/[id]"
             options={{ headerShown: false }}
           />
+          <Stack.Screen
+            name="emergency/sos"
+            options={{ headerShown: false, animation: 'fade', gestureEnabled: false }}
+          />
+          <Stack.Screen
+            name="emergency/stop"
+            options={{ headerShown: false, animation: 'slide_from_bottom' }}
+          />
         </Stack>
       </View>
     </ThemeProvider>

@@ -153,7 +153,7 @@ export default function SuggestionDetailScreen() {
               </Text>
             </View>
             <View className="items-end">
-              <View className="rounded-full border px-2.5 py-1" style={{ backgroundColor: statusStyle.bg, borderColor: statusStyle.border }}>
+              <View style={{ backgroundColor: statusStyle.bg, borderWidth: 1, borderColor: statusStyle.border, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 }}>
                 <Text style={{ fontFamily: 'Pretendard-Bold', fontSize: 12, lineHeight: 14, color: statusStyle.color }}>{statusText}</Text>
               </View>
               <Text

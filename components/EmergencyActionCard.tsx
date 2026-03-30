@@ -9,6 +9,8 @@ type Props = {
   onPress?: () => void;
   /** 태블릿 등에서 캐러셀 카드 폭 (기본 200) */
   cardWidth?: number;
+  /** true면 부모(애니메이션 래퍼) 폭 100% — 홈 캐러셀 폭 애니메이션용 */
+  fillParent?: boolean;
 };
 
 /** 카드 폭 — 가로 스크롤·캐러셀 스냅과 동일 */
@@ -48,9 +50,15 @@ const CTA_TEXT = '#3e63dd';
 /**
  * 위험원 보고 / 긴급 SOS / 작업 중지 — 화이트·파스텔 톤
  */
-export function EmergencyActionCard({ variant, onPress, cardWidth = EMERGENCY_CAROUSEL_CARD_WIDTH }: Props) {
+export function EmergencyActionCard({
+  variant,
+  onPress,
+  cardWidth = EMERGENCY_CAROUSEL_CARD_WIDTH,
+  fillParent = false,
+}: Props) {
   const { s } = useLang();
   const m = cardMetrics(cardWidth);
+  const pressW = fillParent ? ('100%' as const) : m.width;
 
   if (variant === 'hazard') {
     return (
@@ -59,7 +67,7 @@ export function EmergencyActionCard({ variant, onPress, cardWidth = EMERGENCY_CA
         accessibilityRole="button"
         accessibilityLabel={s.emergency.hazard.title}
         className="border border-[rgba(0,0,47,0.08)] active:opacity-95"
-        style={[{ width: m.width, borderRadius: CARD_RADIUS }, HOME_CARD_SHADOW]}>
+        style={[{ width: pressW, borderRadius: CARD_RADIUS }, HOME_CARD_SHADOW]}>
         <View className="overflow-hidden" style={{ borderRadius: CARD_RADIUS }}>
           <LinearGradient
             colors={['#fffbeb', '#fef3c7', '#ffffff']}
@@ -123,7 +131,7 @@ export function EmergencyActionCard({ variant, onPress, cardWidth = EMERGENCY_CA
         accessibilityRole="button"
         accessibilityLabel={s.emergency.sos.title}
         className="border border-[rgba(0,0,47,0.08)] active:opacity-95"
-        style={[{ width: m.width, borderRadius: CARD_RADIUS }, HOME_CARD_SHADOW]}>
+        style={[{ width: pressW, borderRadius: CARD_RADIUS }, HOME_CARD_SHADOW]}>
         <View className="overflow-hidden" style={{ borderRadius: CARD_RADIUS }}>
           <LinearGradient
             colors={['#fff1f2', '#ffe4e6', '#ffffff']}
@@ -186,7 +194,7 @@ export function EmergencyActionCard({ variant, onPress, cardWidth = EMERGENCY_CA
       accessibilityRole="button"
       accessibilityLabel={s.emergency.stop.title}
       className="border border-[rgba(0,0,47,0.08)] active:opacity-95"
-      style={[{ width: m.width, borderRadius: CARD_RADIUS }, HOME_CARD_SHADOW]}>
+      style={[{ width: pressW, borderRadius: CARD_RADIUS }, HOME_CARD_SHADOW]}>
       <View className="overflow-hidden" style={{ borderRadius: CARD_RADIUS }}>
         <LinearGradient
           colors={['#f8fafc', '#e8eef7', '#ffffff']}

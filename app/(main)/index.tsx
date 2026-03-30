@@ -1,8 +1,17 @@
 import { Href, Link, router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ChevronRight, CloudSun, Droplets, Menu, MessageSquare, RefreshCw, Wind } from 'lucide-react-native';
-import { useCallback, useEffect, useMemo, useRef } from 'react';
-import { Pressable, ScrollView, Text, View, useWindowDimensions } from 'react-native';
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import {
+  Alert,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+  useWindowDimensions,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { scrollViewAndroidProps } from '@/constants/scrollViewAndroid';
@@ -47,18 +56,30 @@ export default function HomeScreen() {
     emergencyCarouselGap,
     headerTitleFontSize,
   } = useResponsiveLayout();
-  const carouselSidePad = Math.max(0, (windowWidth - emergencyCardWidth) / 2);
-  const carouselStep = emergencyCardWidth + emergencyCarouselGap;
-  const emergencyCarouselMinH = emergencyCarouselCardMinHeight(emergencyCardWidth, EMERGENCY_CAROUSEL_CARD_WIDTH);
+  /** 긴급 캐러셀 — 고정 카드 폭 N, 슬롯 사이 margin G */
+  const emergencyNarrowW = emergencyCardWidth;
+  const emergencyCarouselStride = emergencyNarrowW + emergencyCarouselGap;
+  const emergencyCarouselSidePad = Math.max(0, (windowWidth - emergencyNarrowW) / 2);
+  const emergencyCarouselMinH = emergencyCarouselCardMinHeight(emergencyNarrowW, EMERGENCY_CAROUSEL_CARD_WIDTH);
   const emergencyCarouselRef = useRef<ScrollView>(null);
-  const centerEmergencySos = useCallback(() => {
-    emergencyCarouselRef.current?.scrollTo({ x: carouselStep, y: 0, animated: false });
-  }, [carouselStep]);
+  const [emergencyFocusedIndex, setEmergencyFocusedIndex] = useState(1);
 
-  useEffect(() => {
-    const id = requestAnimationFrame(() => centerEmergencySos());
+  useLayoutEffect(() => {
+    const stride = emergencyCarouselStride;
+    const id = requestAnimationFrame(() => {
+      emergencyCarouselRef.current?.scrollTo({ x: stride * emergencyFocusedIndex, y: 0, animated: false });
+    });
     return () => cancelAnimationFrame(id);
-  }, [centerEmergencySos, windowWidth, carouselStep]);
+  }, [emergencyCarouselStride, emergencyFocusedIndex, emergencyNarrowW]);
+
+  const onEmergencyCarouselScrollEnd = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const x = e.nativeEvent.contentOffset.x;
+      const idx = Math.round(x / emergencyCarouselStride);
+      setEmergencyFocusedIndex(Math.max(0, Math.min(2, idx)));
+    },
+    [emergencyCarouselStride],
+  );
 
   return (
     <View className="flex-1 bg-[#fbfdff]">
@@ -271,7 +292,6 @@ export default function HomeScreen() {
           />
         </View>
 
-        {/* 긴급 조치 캐러셀: 위험원 보고 | 긴급 SOS(초기 중앙) | 작업 중지 */}
         <View style={{ overflow: 'visible' }}>
           <ScrollView
             {...scrollViewAndroidProps}
@@ -279,19 +299,76 @@ export default function HomeScreen() {
             horizontal
             showsHorizontalScrollIndicator={false}
             className="max-w-full"
-            style={{ minHeight: Math.max(EMERGENCY_CAROUSEL_CARD_MIN_HEIGHT, emergencyCarouselMinH) }}
+            style={{
+              minHeight: Math.max(EMERGENCY_CAROUSEL_CARD_MIN_HEIGHT, emergencyCarouselMinH),
+              overflow: 'visible',
+            }}
             decelerationRate="fast"
-            snapToInterval={carouselStep}
+            snapToInterval={emergencyCarouselStride}
             snapToAlignment="start"
+            onMomentumScrollEnd={onEmergencyCarouselScrollEnd}
             contentContainerStyle={{
-              gap: emergencyCarouselGap,
-              paddingLeft: carouselSidePad,
-              paddingRight: carouselSidePad,
+              paddingLeft: emergencyCarouselSidePad,
+              paddingRight: emergencyCarouselSidePad,
               paddingVertical: 0,
             }}>
-            <EmergencyActionCard variant="hazard" cardWidth={emergencyCardWidth} onPress={() => {}} />
-            <EmergencyActionCard variant="sos" cardWidth={emergencyCardWidth} onPress={() => {}} />
-            <EmergencyActionCard variant="stop" cardWidth={emergencyCardWidth} onPress={() => {}} />
+            <View
+              style={{
+                width: emergencyNarrowW,
+                marginRight: emergencyCarouselGap,
+                alignItems: 'center',
+                justifyContent: 'center',
+                overflow: 'visible',
+              }}
+              pointerEvents="box-none">
+              <EmergencyActionCard
+                variant="hazard"
+                cardWidth={emergencyNarrowW}
+                onPress={() => router.push('/suggestions/new?from=hazard' as Href)}
+              />
+            </View>
+            <View
+              style={{
+                width: emergencyNarrowW,
+                marginRight: emergencyCarouselGap,
+                alignItems: 'center',
+                justifyContent: 'center',
+                overflow: 'visible',
+              }}
+              pointerEvents="box-none">
+              <EmergencyActionCard
+                variant="sos"
+                cardWidth={emergencyNarrowW}
+                onPress={() => {
+                  Alert.alert(
+                    s.emergency.sos.confirmTitle,
+                    s.emergency.sos.confirmMessage,
+                    [
+                      { text: s.emergency.sos.confirmNo, style: 'cancel' },
+                      {
+                        text: s.emergency.sos.confirmYes,
+                        style: 'destructive',
+                        onPress: () => router.push('/emergency/sos' as Href),
+                      },
+                    ],
+                  );
+                }}
+              />
+            </View>
+            <View
+              style={{
+                width: emergencyNarrowW,
+                alignItems: 'center',
+                justifyContent: 'center',
+                overflow: 'visible',
+              }}
+              pointerEvents="box-none">
+              <EmergencyActionCard
+                variant="stop"
+                cardWidth={emergencyNarrowW}
+                onPress={() => router.push('/emergency/stop' as Href)}
+              />
+            </View>
           </ScrollView>
         </View>
 
